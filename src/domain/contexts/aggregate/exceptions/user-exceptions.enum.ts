@@ -1,0 +1,8 @@
+export enum UserExceptionMessages {
+  MULTIFACTOR_AUTH_INITIALIZED = 'Se ha iniciado la autenticacion multifactor, revise su metodo de contacto.',
+  MULTIFACTOR_AUTH_REINITIALIZED = 'Se ha iniciado la autenticacion multifactor nuevamente porque el anterior expiro, revise su metodo de contacto.',
+  USER_BLOCKED = 'El usuario por seguridad ha sido bloqueado.',
+  USER_DELETED = 'El usuario no existe.',
+  AT_LEAST_ONE_AUTH_PROPERTY_REQUIRED = 'Se requiere actualizar al menos el email o la contraseña.',
+  INVALID_CREDENTIALS = 'Las credenciales proporcionadas son incorrectas',
+}

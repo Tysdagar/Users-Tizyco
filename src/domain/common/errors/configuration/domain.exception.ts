@@ -2,11 +2,11 @@
  * Represents a business logic error, extending the `CustomError` class.
  * This error is used to handle scenarios where a specific business rule is violated.
  */
-import { ErrorCodes } from './configuration/enums/error-codes.enum';
-import { ErrorTypes } from './configuration/enums/error-types.enum';
-import { CustomError } from './configuration/custom-error.config';
+import { ErrorCodes } from './enums/error-codes.enum';
+import { ErrorTypes } from './enums/error-types.enum';
+import { CustomError } from './custom-error.config';
 
-export class BusinessError extends CustomError {
+export class DomainException extends CustomError {
   /**
    * Creates an instance of `BusinessError`.
    *

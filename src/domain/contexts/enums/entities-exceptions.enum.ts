@@ -1,0 +1,6 @@
+export enum EntitiesTriggersExceptions {
+  USER = 'USER',
+  AUTHENTICATION = 'AUTHENTICATION',
+  INFORMATION = 'INFORMATION',
+  MULTIFACTOR = 'MULTIFACTOR',
+}

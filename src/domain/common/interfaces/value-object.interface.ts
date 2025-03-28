@@ -32,18 +32,4 @@ export interface IValueObject<T> {
    * ```
    */
   get value(): T;
-
-  /**
-   * Updates the internal value of the Value Object.
-   *
-   * @param value - The new value to set.
-   *
-   * @example
-   * ```typescript
-   * const value: IValueObject<number> = new SomeValueObject(10);
-   * value.setValue(20);
-   * console.log(value.getValue); // 20
-   * ```
-   */
-  setValue(value: T): void;
 }

@@ -2,7 +2,7 @@ import { Inject, Injectable, Type } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core/injector';
 import { Command, Query } from '@nestjs/cqrs';
 import { CustomValidator } from 'src/application/abstract/custom-validator.abstract';
-import { ValidationError } from 'src/domain/common/errors/validation.error';
+import { ValidationException } from 'src/domain/common/errors/validation.exception';
 import {
   IValidationService,
   VALIDATORS,
@@ -60,7 +60,7 @@ export class ValidationService<Request extends Command<any> | Query<any>>
    * Throws a `ValidationError` if validation fails.
    *
    * @param request - The request instance to validate.
-   * @throws {ValidationError} If the request fails validation.
+   * @throws {ValidationException} If the request fails validation.
    */
   public async executeValidationGuard(request: Request): Promise<void> {
     try {
@@ -69,7 +69,7 @@ export class ValidationService<Request extends Command<any> | Query<any>>
       const isInvalid = await this.validator.validate(request);
 
       if (isInvalid) {
-        throw new ValidationError(this.validator.getFailures());
+        throw new ValidationException(this.validator.getFailures());
       }
     } finally {
       this.validator.cleanFailures();

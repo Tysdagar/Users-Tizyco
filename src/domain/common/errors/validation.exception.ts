@@ -7,7 +7,7 @@ import { ErrorCodes } from './configuration/enums/error-codes.enum';
 import { ErrorTypes } from './configuration/enums/error-types.enum';
 import { CustomError } from './configuration/custom-error.config';
 
-export class ValidationError extends CustomError {
+export class ValidationException extends CustomError {
   /**
    * Stores the validation failures associated with this error.
    */
