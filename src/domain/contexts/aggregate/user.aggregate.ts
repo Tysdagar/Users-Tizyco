@@ -1,180 +1,342 @@
 import { randomUUID } from 'crypto';
-import { Authentication } from '../entities/authentication/user-authentication.entity';
-import { UserInformation } from '../entities/information/user-information.entity';
-import { Multifactor } from '../entities/multifactor/user-multifactor.entity';
-import { OperationResult, UserInformationParams } from '../types/user';
-import { Status } from './value-objects/status.vo';
-import { UserStatus } from './configuration/status.configuration';
 import { AggregateRoot } from 'src/domain/common/abstract/aggregate-root.abstract';
-import { IPasswordSecurityService } from '../interfaces/password-security.interface';
-import { MultifactorException } from '../entities/multifactor/exceptions/multifactor.exception';
-import { USER_EXCEPTION_FACTORY } from './exceptions/user-exception.factory';
 
+import { Authentication } from '../entities/authentication/user-authentication.entity';
+import { Multifactor } from '../entities/multifactor/user-multifactor.entity';
+import { MultifactorException } from '../entities/multifactor/exceptions/multifactor.exception';
+import { UserInformation } from '../entities/information/user-information.entity';
+
+import { ILoginAttemptService } from '../interfaces/login-attempts.interface';
+import { IPasswordSecurityService } from '../interfaces/password-security.interface';
+
+import { USER_EXCEPTION_FACTORY } from './exceptions/user-exception.factory';
+import { UserStatus } from './configuration/status.configuration';
+import { Status } from './value-objects/status.vo';
+
+import { type UserInformationParams } from '../types/user';
+import { MultifactorInitializedEvent } from './events/multifactor-initialized.event';
+
+/**
+ * Represents the User aggregate root in the domain layer.
+ * Handles operations related to user authentication, multifactor authentication, user information, and status.
+ */
 export class User extends AggregateRoot {
+  /**
+   * Private constructor to enforce factory method usage.
+   *
+   * @param userId - Unique identifier for the user.
+   * @param _authentication - Authentication details.
+   * @param _status - Initial status of the user.
+   * @param _information - Personal information of the user.
+   * @param _multifactorMethods - Multifactor register methods of the user.
+   */
   private constructor(
-    private readonly _userId: string,
-    private readonly authentication: Authentication,
+    userId: string,
+    private readonly _authentication: Authentication,
     private _status: Status,
-    private readonly information: UserInformation = UserInformation.initialize(),
-    private readonly multifactors: Multifactor[] = [],
+    private readonly _information: UserInformation = UserInformation.initialize(),
+    private readonly _multifactorMethods: Multifactor[] = [],
   ) {
-    super();
-    this._userId = _userId;
-    this.authentication = authentication;
+    super(userId);
+    this._authentication = _authentication;
     this._status = _status;
+    this._information = _information;
+    this._multifactorMethods = _multifactorMethods;
   }
 
-  // Create Operations
+  // Static Factory Methods
 
-  public static create(email: string, password: string): User {
-    return new User(
+  /**
+   * Creates a new user with the specified email and password.
+   *
+   * @param email - User's email.
+   * @param password - User's password.
+   * @returns A new User instance.
+   */
+  public static async create(
+    passwordService: IPasswordSecurityService,
+    email: string,
+    password: string,
+  ): Promise<User> {
+    const user = new User(
       randomUUID(),
       Authentication.create(email, password),
       new Status(UserStatus.UNVERIFIED),
     );
+
+    await passwordService.secure(user._authentication.password);
+
+    return user;
   }
 
-  private addMultifactorMethod() {}
+  // Multifactor Operations
 
-  // Update Operations
+  /**
+   * Adds a new multifactor authentication method for the user.
+   *
+   * @param method - Type of the multifactor method.
+   * @param contact - Contact information for the multifactor method.
+   */
+  public addMultifactorMethod(method: string, contact: string): void {
+    const newMethod = Multifactor.create(method, contact);
+    this._multifactorMethods.push(newMethod);
+  }
 
-  public updateAuthentication(email?: string, password?: string) {
-    if (!email && !password) {
-      USER_EXCEPTION_FACTORY.throw('AT_LEAST_ONE_AUTH_PROPERTY_REQUIRED');
+  /**
+   * Retrieves the currently active multifactor method, if any.
+   *
+   * @returns The active multifactor method or undefined.
+   */
+  private getActiveMultifactorMethod(): Multifactor | undefined {
+    return this._multifactorMethods.find((method) => method.isActive);
+  }
+
+  public validateMultifactorCode(code: number) {
+    const multifactor = this.getActiveMultifactorMethod();
+
+    if (!multifactor) {
+      throw USER_EXCEPTION_FACTORY.throw('NO_MULTIFACTOR_CODE_TO_VALIDATE');
     }
 
-    if (email) {
-      this.authentication.updateEmail(email);
-    }
-
-    if (password) {
-      this.authentication.updatePassword(password);
-    }
+    multifactor.validate(code);
   }
 
-  public updateUserInformation(information: UserInformationParams) {
-    this.information.update(information);
-  }
-
-  // Checking Business Data Operations
-
-  private checkRequiredMultifactorGuard(): void {
-    try {
-      const multifactor = this.findMultifactorActiveMethod();
-
-      if (!multifactor) {
-        return;
-      }
-
-      this.startMultifactorAuthentication(multifactor);
-    } catch (error) {
-      this.handleCheckingMultifactorException(error);
-    }
-  }
-
-  private checkUserHasValidStatusGuard() {
-    if (this.validateStatus(UserStatus.BLOCKED)) {
-      USER_EXCEPTION_FACTORY.throw('USER_BLOCKED');
-    }
-
-    if (this.validateStatus(UserStatus.DELETED)) {
-      USER_EXCEPTION_FACTORY.throwValidation('USER_DELETED');
-    }
-  }
-
-  private checkCredentialsGuard(
-    passwordService: IPasswordSecurityService,
-    password: string,
-  ) {
-    const isPasswordCorrect = passwordService.check(
-      password,
-      this.authentication.password,
-    );
-    if (!isPasswordCorrect) {
-      USER_EXCEPTION_FACTORY.throw('INVALID_CREDENTIALS');
-    }
-  }
-
-  // Misc Operations
-
-  private findMultifactorActiveMethod(): Multifactor | void {
-    return this.multifactors.find(
-      (multifactor) => multifactor.isActive === true,
-    );
-  }
-
-  private validateStatus(status: string) {
-    if (this._status.value === status) {
-      return true;
-    }
-  }
-
-  private startMultifactorAuthentication(multifactor: Multifactor) {
-    this.initializeMultifactorAuthentication(multifactor);
-    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_INITIALIZED');
-  }
-
-  private reTryMultifactorAuthentication(multifactor: Multifactor) {
-    this.initializeMultifactorAuthentication(multifactor);
-    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_REINITIALIZED');
-  }
-
-  // Business Operations
-
-  public tryLogin(
-    passwordService: IPasswordSecurityService,
-    password: string,
-  ): OperationResult {
-    this.checkCredentialsGuard(passwordService, password);
-    this.checkUserHasValidStatusGuard();
-    this.checkRequiredMultifactorGuard();
-    return this.triggerSuccessfullyLogin();
-  }
-
-  private triggerSuccessfullyLogin(): OperationResult {
-    return { success: true };
-  }
-
-  private initializeMultifactorAuthentication(multifactor: Multifactor) {
+  /**
+   * Initializes multifactor authentication for the given method and throws an exception.
+   *
+   * @param multifactor - The multifactor method to initialize.
+   */
+  private initializeMultifactorAuthentication(multifactor: Multifactor): void {
     multifactor.initialize();
+    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_INITIALIZED');
+    this.triggerMultifactorInitializedEvent(multifactor);
   }
 
-  public securePassword(passwordService: IPasswordSecurityService) {
-    this.authentication.securePassword(passwordService);
+  /**
+   * Retries multifactor authentication after failure and throws an exception.
+   *
+   * @param multifactor - The multifactor method to retry.
+   */
+  private retryMultifactorAuthentication(multifactor: Multifactor): void {
+    multifactor.initialize();
+    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_REINITIALIZED');
+    this.triggerMultifactorInitializedEvent(multifactor);
   }
 
-  // Domain Exceptions
-
-  private handleCheckingMultifactorException(error: unknown): void {
+  /**
+   * Handles exceptions related to multifactor authentication.
+   *
+   * @param multifactor - The multifactor method that caused the exception.
+   * @param error - The exception thrown.
+   */
+  private handleMultifactorException(
+    multifactor: Multifactor,
+    error: unknown,
+  ): void {
     if (error instanceof MultifactorException) {
-      if (error.matchesErrorKey('ALREADY_AUTHENTICATED')) {
-        return;
-      }
+      if (error.matchesErrorKey('ALREADY_AUTHENTICATED')) return;
+      if (error.matchesErrorKey('EXPIRED_CODE'))
+        this.retryMultifactorAuthentication(multifactor);
     }
     throw error;
   }
 
-  // Status
+  // Authentication Operations
 
-  public verify() {
-    this._status = new Status(UserStatus.ACTIVE);
+  /**
+   * Updates the user's email or password.
+   *
+   * @param email - New email for the user (optional).
+   * @param password - New password for the user (optional).
+   */
+  public updateAuthentication(email?: string, password?: string): void {
+    if (!email && !password) {
+      USER_EXCEPTION_FACTORY.throw('AT_LEAST_ONE_AUTH_PROPERTY_REQUIRED');
+    }
+    if (email) this._authentication.updateEmail(email);
+    if (password) this._authentication.updatePassword(password);
   }
 
-  public deactive() {
+  // Information Operations
+
+  /**
+   * Updates the user's personal information.
+   *
+   * @param information - New user information.
+   */
+  public updateUserInformation(information: UserInformationParams): void {
+    this._information.update(information);
+  }
+
+  // Status Management
+
+  /**
+   * Marks the user as verified.
+   */
+  public verify(): void {
+    if (this.isStatus(UserStatus.VERIFIED))
+      USER_EXCEPTION_FACTORY.throw('USER_ALREADY_VERIFIED');
+    this._status = new Status(UserStatus.VERIFIED);
+  }
+
+  /**
+   * Activates the user's account.
+   */
+  public activate(): void {
+    this._status = new Status(UserStatus.VERIFIED);
+  }
+
+  /**
+   * Deactivates the user's account.
+   */
+  public deactivate(): void {
     this._status = new Status(UserStatus.INACTIVE);
   }
 
-  public delete() {
+  /**
+   * Marks the user's account as deleted.
+   */
+  public delete(): void {
     this._status = new Status(UserStatus.DELETED);
   }
 
-  public block() {
+  /**
+   * Blocks the user's account and throws an exception.
+   */
+  public block(): void {
     this._status = new Status(UserStatus.BLOCKED);
+    USER_EXCEPTION_FACTORY.throw('USER_BLOCKED');
   }
 
-  // Getters
+  /**
+   * Unblocks the user's account.
+   */
+  public unblock(): void {
+    this._status = new Status(UserStatus.VERIFIED);
+  }
 
-  get userId(): string {
-    return this._userId;
+  /**
+   * Checks if the user's current status matches the specified status.
+   *
+   * @param status - The status to check against.
+   * @returns True if the user's status matches; otherwise, false.
+   */
+  private isStatus(status: UserStatus): boolean {
+    return this._status.value === (status as string);
+  }
+
+  // Login Operations
+
+  /**
+   * Attempts to log in the user, validating credentials and managing login attempts.
+   *
+   * @param loginAttemptService - Service to manage login attempts.
+   * @param passwordService - Service to validate the password.
+   * @param password - Password provided by the user.
+   */
+  public async tryLogin(
+    loginAttemptService: ILoginAttemptService,
+    passwordService: IPasswordSecurityService,
+    password: string,
+  ): Promise<void> {
+    await this.checkTemporaryBlockStatus(loginAttemptService);
+    await this.validateCredentials(
+      loginAttemptService,
+      passwordService,
+      password,
+    );
+    this.checkMultifactorAuthentication();
+    await this.checkLoginAttemptLimit(loginAttemptService);
+    await loginAttemptService.resetAttempts(this.id);
+  }
+
+  /**
+   * Validates the user's password and records failed attempts if incorrect.
+   *
+   * @param loginAttemptService - Service to manage login attempts.
+   * @param passwordService - Service to validate the password.
+   * @param password - Password provided by the user.
+   */
+  private async validateCredentials(
+    loginAttemptService: ILoginAttemptService,
+    passwordService: IPasswordSecurityService,
+    password: string,
+  ): Promise<void> {
+    const isPasswordCorrect = await passwordService.check(
+      password,
+      this._authentication.password,
+    );
+    if (isPasswordCorrect) {
+      this.checkValidUserStatus();
+    } else {
+      await loginAttemptService.recordFailedAttempt(this.id);
+      USER_EXCEPTION_FACTORY.throwValidation('INVALID_CREDENTIALS');
+    }
+  }
+
+  /**
+   * Checks for active multifactor authentication and handles it accordingly.
+   */
+  private checkMultifactorAuthentication(): void {
+    const activeMethod = this.getActiveMultifactorMethod();
+    if (!activeMethod) return;
+    try {
+      this.initializeMultifactorAuthentication(activeMethod);
+    } catch (error) {
+      this.handleMultifactorException(activeMethod, error);
+    }
+  }
+
+  /**
+   * Checks if the user has exceeded the login attempt limit and blocks the account if necessary.
+   *
+   * @param loginAttemptService - Service to manage login attempts.
+   */
+  private async checkLoginAttemptLimit(
+    loginAttemptService: ILoginAttemptService,
+  ): Promise<void> {
+    const hasExceededLimit = await loginAttemptService.hasExceededAttemptLimit(
+      this.id,
+    );
+    if (hasExceededLimit) {
+      this.block();
+      await loginAttemptService.blockUserTemporarily(this.id);
+    }
+  }
+
+  /**
+   * Checks if the user is temporarily blocked and unblocks if the block period has expired.
+   *
+   * @param loginAttemptService - Service to manage login attempts.
+   */
+  private async checkTemporaryBlockStatus(
+    loginAttemptService: ILoginAttemptService,
+  ): Promise<void> {
+    const isBlocked = this.isStatus(UserStatus.BLOCKED);
+    const isStillBlocked = await loginAttemptService.isTemporalyBlockedYet(
+      this.id,
+    );
+    if (isBlocked && !isStillBlocked) {
+      this.unblock();
+      await loginAttemptService.resetAttempts(this.id);
+    }
+  }
+
+  /**
+   * Validates if the user's status allows login.
+   */
+  private checkValidUserStatus(): void {
+    if (this.isStatus(UserStatus.BLOCKED)) {
+      USER_EXCEPTION_FACTORY.throw('USER_BLOCKED');
+    }
+    if (this.isStatus(UserStatus.DELETED)) {
+      USER_EXCEPTION_FACTORY.throwValidation('USER_DELETED');
+    }
+  }
+
+  // Events
+
+  private triggerMultifactorInitializedEvent(multifactor: Multifactor) {
+    this.addEvent(new MultifactorInitializedEvent(this.id, multifactor));
   }
 }

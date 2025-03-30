@@ -8,7 +8,6 @@ import { MULTIFACTOR_EXCEPTION_FACTORY } from './exceptions/multifactor-exceptio
 export class Multifactor {
   private readonly _multifactorId: string;
   private readonly _authenticationChannel: AuthenticationChannel;
-
   private _active = false;
   private _verified = false;
   private _status = new MultifactorStatus(MFAStatus.NOT_STARTED);
@@ -59,10 +58,6 @@ export class Multifactor {
 
     if (this.isInitialized) {
       MULTIFACTOR_EXCEPTION_FACTORY.throw('CODE_IN_PROGRESS');
-    }
-
-    if (this.isExpired) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('EXPIRED_CODE');
     }
 
     this.generateCode();
@@ -141,18 +136,14 @@ export class Multifactor {
   }
 
   private get isInitialized(): boolean {
-    return this._status.value === (MFAStatus.INITIALIZED as string);
+    return this._status.value === MFAStatus.INITIALIZED;
   }
 
   private get isAuthenticated(): boolean {
-    return this._status.value === (MFAStatus.AUTHENTICATED as string);
+    return this._status.value === MFAStatus.AUTHENTICATED;
   }
 
-  get isExpired(): boolean {
-    return this._status.value === (MFAStatus.EXPIRED as string);
-  }
-
-  private get lastTimeUsed(): Date | null {
-    return this._lastTimeUsed;
+  private get isExpired(): boolean {
+    return this._status.value === MFAStatus.EXPIRED;
   }
 }

@@ -15,7 +15,7 @@ export abstract class ExceptionFactoryBase<
     this.field = field;
   }
 
-  public throw(errorKey: keyof Messages): never {
+  public throw(errorKey: keyof Messages): never | Exception {
     const message = this.messages[errorKey];
     throw new this.exceptionRef(message);
   }

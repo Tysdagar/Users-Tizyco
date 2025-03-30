@@ -5,7 +5,7 @@ import { Module } from '@nestjs/common';
 import {
   VALIDATION_SERVICE,
   VALIDATORS,
-} from 'src/domain/common/interfaces/validation-service.interface';
+} from 'src/domain/common/interfaces/services/validation-service.interface';
 import { ValidationService } from 'src/infraestructure/services/validation.service';
 
 /**

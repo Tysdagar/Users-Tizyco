@@ -1,7 +1,7 @@
 import {
   Failure,
   ICustomValidator,
-} from 'src/domain/common/interfaces/custom-validator.interface';
+} from 'src/domain/common/interfaces/utils/custom-validator.interface';
 
 /**
  * Abstract base class for custom validators.

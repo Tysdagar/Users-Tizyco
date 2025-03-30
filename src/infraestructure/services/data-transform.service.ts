@@ -1,11 +1,11 @@
 import {
   ISerializeService,
   SERIALIZE_SERVICE,
-} from 'src/domain/common/interfaces/serialize-service.interface';
+} from 'src/domain/common/interfaces/services/serialize-service.interface';
 import {
   ENCRYPT_SERVICE,
   IEncryptService,
-} from 'src/domain/common/interfaces/encrypt-service.interface';
+} from 'src/domain/common/interfaces/services/encrypt-service.interface';
 import { Inject, Injectable } from '@nestjs/common';
 
 /**

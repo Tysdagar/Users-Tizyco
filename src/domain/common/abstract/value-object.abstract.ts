@@ -1,6 +1,6 @@
 import { ValidationException } from '../errors/validation.exception';
-import { Failure } from '../interfaces/custom-validator.interface';
-import { IValueObject } from '../interfaces/value-object.interface';
+import { Failure } from '../interfaces/utils/custom-validator.interface';
+import { IValueObject } from '../interfaces/concepts/value-object.interface';
 
 /**
  * Abstract base class for Value Objects in a Domain-Driven Design context.

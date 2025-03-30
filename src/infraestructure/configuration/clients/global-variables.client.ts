@@ -1,4 +1,4 @@
-import { StateVariableMap } from 'src/domain/common/interfaces/state-sync.interface';
+import { StateVariableMap } from 'src/domain/common/interfaces/services/state-sync.interface';
 
 /**
  * GlobalVariablesClient provides a singleton instance to manage global state variables.

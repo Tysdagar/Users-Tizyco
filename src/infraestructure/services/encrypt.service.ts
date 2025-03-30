@@ -5,7 +5,7 @@ import {
   pbkdf2Sync,
   randomBytes,
 } from 'crypto';
-import { IEncryptService } from 'src/domain/common/interfaces/encrypt-service.interface';
+import { IEncryptService } from 'src/domain/common/interfaces/services/encrypt-service.interface';
 import { ConfigClient } from '../configuration/clients/config.client';
 
 /**

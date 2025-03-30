@@ -5,4 +5,6 @@ export enum UserExceptionMessages {
   USER_DELETED = 'El usuario no existe.',
   AT_LEAST_ONE_AUTH_PROPERTY_REQUIRED = 'Se requiere actualizar al menos el email o la contraseña.',
   INVALID_CREDENTIALS = 'Las credenciales proporcionadas son incorrectas',
+  USER_ALREADY_VERIFIED = 'El usuario ya se encuentra verificado.',
+  NO_MULTIFACTOR_CODE_TO_VALIDATE = 'No existe el codigo multifactor a validar.',
 }

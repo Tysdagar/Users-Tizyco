@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ISerializeService } from 'src/domain/common/interfaces/serialize-service.interface';
+import { ISerializeService } from 'src/domain/common/interfaces/services/serialize-service.interface';
 
 /**
  * Service responsible for serializing and deserializing objects.

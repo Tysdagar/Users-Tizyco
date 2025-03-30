@@ -1,16 +1,19 @@
 import { ValueObject } from 'src/domain/common/abstract/value-object.abstract';
-import { SupportedMFAStatus } from '../configuration/mfa-status.configuration';
+import {
+  MFAStatus,
+  SupportedMFAStatus,
+} from '../configuration/mfa-status.configuration';
 
-export class MultifactorStatus extends ValueObject<string> {
-  constructor(status: string) {
+export class MultifactorStatus extends ValueObject<MFAStatus> {
+  constructor(status: MFAStatus) {
     super(status);
   }
 
-  public validate(value: string): boolean {
+  public validate(value: MFAStatus): boolean {
     return this.validateStatus(value);
   }
 
-  private validateStatus(status: string) {
+  private validateStatus(status: MFAStatus) {
     if (!status) {
       this.addError(
         'Status',

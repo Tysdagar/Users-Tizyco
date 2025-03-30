@@ -1,6 +1,6 @@
 import { SupportedValuesUtil } from 'src/domain/common/abstract/supported-values.abstract';
 
-export enum Gender {
+export enum Genders {
   MALE = 'male',
   FEMALE = 'female',
   NON_BINARY = 'nonbinary',
@@ -10,10 +10,10 @@ export enum Gender {
 
 export class SupportedGenders extends SupportedValuesUtil {
   public static isSupportedGender(gender: string): boolean {
-    return this.isSupportedValue(Gender, gender);
+    return this.isSupportedValue(Genders, gender);
   }
 
   public static getSupportedGenders(): string[] {
-    return this.getSupportedValues(Gender);
+    return this.getSupportedValues(Genders);
   }
 }

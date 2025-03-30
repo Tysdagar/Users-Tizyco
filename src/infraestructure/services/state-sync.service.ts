@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { IStateDAOSync } from 'src/domain/common/interfaces/state-sync.interface';
+import { IStateDAOSync } from 'src/domain/common/interfaces/services/state-sync.interface';
 import { GlobalVariablesClient } from 'src/infraestructure/configuration/clients/global-variables.client';
 
 /**

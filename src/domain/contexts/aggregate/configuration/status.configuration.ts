@@ -1,7 +1,7 @@
 import { SupportedValuesUtil } from 'src/domain/common/abstract/supported-values.abstract';
 
 export enum UserStatus {
-  ACTIVE = 'Active',
+  VERIFIED = 'Verified',
   INACTIVE = 'Inactive',
   UNVERIFIED = 'Unverified',
   BLOCKED = 'Blocked',

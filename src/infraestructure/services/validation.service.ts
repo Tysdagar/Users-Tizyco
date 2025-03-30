@@ -6,7 +6,7 @@ import { ValidationException } from 'src/domain/common/errors/validation.excepti
 import {
   IValidationService,
   VALIDATORS,
-} from 'src/domain/common/interfaces/validation-service.interface';
+} from 'src/domain/common/interfaces/services/validation-service.interface';
 
 /**
  * Validation service to execute request validation using custom validators.
