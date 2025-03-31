@@ -1,5 +1,5 @@
 import { ValueObject } from 'src/domain/common/abstract/value-object.abstract';
-import { SupportedStatus } from '../configuration/status.configuration';
+import { SupportedUserStatus } from '../configuration/status.configuration';
 
 export class Status extends ValueObject<string> {
   constructor(status: string) {
@@ -16,7 +16,7 @@ export class Status extends ValueObject<string> {
       return false;
     }
 
-    if (!SupportedStatus.isSupportedStatus(status)) {
+    if (!SupportedUserStatus.isSupportedUserStatus(status)) {
       this.addError('Status', `Status desconocido: ${status}`);
       return false;
     }

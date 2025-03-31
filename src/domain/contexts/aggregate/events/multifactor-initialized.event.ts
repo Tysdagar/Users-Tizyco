@@ -7,5 +7,9 @@ export class MultifactorInitializedEvent implements IEvent {
   constructor(
     public readonly userId: string,
     public readonly multifactor: Multifactor,
-  ) {}
+  ) {
+    this.userId = userId;
+    this.multifactor = multifactor;
+    this.ocurredOn = new Date();
+  }
 }

@@ -16,7 +16,7 @@ export class Password extends ValueObject<PasswordData> {
 
   public validate(passwordData: PasswordData): boolean {
     if (!passwordData.password) {
-      this.addError('Contraseña', 'Se requiere una contraseña en este campo');
+      this.addError('Contraseña', 'Se requiere una contraseña valida.');
       return false;
     }
 

@@ -9,7 +9,7 @@ export abstract class EntityService<T extends AggregateRoot> {
     this.eventBus = eventBus;
   }
 
-  public configure(entity: T): void {
+  public configureEntity(entity: T): void {
     if (this._entity) {
       throw new DomainException(
         `La entidad '${this.getEntityName()}' ya ha sido configurada en el servicio.`,
@@ -21,7 +21,7 @@ export abstract class EntityService<T extends AggregateRoot> {
   private ensureConfigured(): void {
     if (!this._entity) {
       throw new DomainException(
-        `La entidad '${this.getEntityName()}' no ha sido configurada para interactuar con el servicio.`,
+        `La entidad para el '${this.getEntityName()}' no ha sido configurada para interactuar con el servicio.`,
       );
     }
   }
@@ -49,7 +49,7 @@ export abstract class EntityService<T extends AggregateRoot> {
     return result;
   }
 
-  protected executeSync<TResult>(executer: () => TResult): TResult {
+  protected execute<TResult>(executer: () => TResult): TResult {
     const result = executer();
     this.entity.publishEvents(this.eventBus);
     return result;

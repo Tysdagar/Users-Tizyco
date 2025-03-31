@@ -8,12 +8,12 @@ export enum UserStatus {
   DELETED = 'Deleted',
 }
 
-export class SupportedStatus extends SupportedValuesUtil {
-  public static isSupportedStatus(status: string): boolean {
+export class SupportedUserStatus extends SupportedValuesUtil {
+  public static isSupportedUserStatus(status: string): boolean {
     return this.isSupportedValue(UserStatus, status);
   }
 
-  public static getSupportedStatus(): string[] {
+  public static getSupportedUserStatus(): string[] {
     return this.getSupportedValues(UserStatus);
   }
 }

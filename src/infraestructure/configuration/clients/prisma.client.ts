@@ -14,7 +14,7 @@ export class PrismaClient
    * @returns {Promise<void>}
    */
   async onModuleInit(): Promise<void> {
-    //await this.$connect();
+    await this.$connect();
   }
 
   /**
@@ -22,6 +22,6 @@ export class PrismaClient
    * @returns {Promise<void>}
    */
   async onModuleDestroy(): Promise<void> {
-    //await this.$disconnect();
+    await this.$disconnect();
   }
 }

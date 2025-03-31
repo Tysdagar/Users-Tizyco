@@ -4,4 +4,5 @@ export const USER_REPOSITORY = Symbol('IUserRepository');
 
 export interface IUserRepository {
   save(user: User): Promise<void>;
+  existsByEmail(email: string): Promise<boolean>;
 }

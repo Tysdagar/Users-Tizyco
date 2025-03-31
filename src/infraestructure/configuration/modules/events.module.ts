@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { UserEventPublisher } from 'src/application/services/event-publisher.service';
+import { EVENT_BUS } from 'src/domain/common/interfaces/concepts/event-bus.interface';
+import { NestEventBus } from '../providers/events.provider';
 
 /**
  * The `EventsModule` is responsible for managing event-based communication
@@ -10,11 +13,14 @@ import { Module } from '@nestjs/common';
   /**
    * Handlers and publishers registered as providers.
    */
-  providers: [],
+  providers: [
+    UserEventPublisher,
+    { provide: EVENT_BUS, useClass: NestEventBus },
+  ],
 
   /**
    * Exported providers to make them available for use in other modules.
    */
-  exports: [],
+  exports: [UserEventPublisher, EVENT_BUS],
 })
 export class EventsModule {}

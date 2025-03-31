@@ -13,7 +13,10 @@ import { USER_EXCEPTION_FACTORY } from './exceptions/user-exception.factory';
 import { UserStatus } from './configuration/status.configuration';
 import { Status } from './value-objects/status.vo';
 
-import { type UserInformationParams } from '../types/user';
+import {
+  UserCreatedProperties,
+  type UserInformationParams,
+} from '../types/user';
 import { MultifactorInitializedEvent } from './events/multifactor-initialized.event';
 
 /**
@@ -64,7 +67,7 @@ export class User extends AggregateRoot {
       new Status(UserStatus.UNVERIFIED),
     );
 
-    await passwordService.secure(user._authentication.password);
+    await user._authentication.securePassword(passwordService);
 
     return user;
   }
@@ -338,5 +341,20 @@ export class User extends AggregateRoot {
 
   private triggerMultifactorInitializedEvent(multifactor: Multifactor) {
     this.addEvent(new MultifactorInitializedEvent(this.id, multifactor));
+  }
+
+  // Getters
+
+  get email() {
+    return this._authentication.email;
+  }
+
+  get createdState(): UserCreatedProperties {
+    return {
+      userId: this.id,
+      email: this.email,
+      password: this._authentication.password,
+      status: this._status.value,
+    };
   }
 }

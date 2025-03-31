@@ -7,6 +7,13 @@ export interface UserInformationParams {
   gender?: string;
 }
 
+export interface UserCreatedProperties {
+  userId: string;
+  email: string;
+  password: string;
+  status: string;
+}
+
 export type FullNameData = { firstName?: string; lastName?: string };
 export type LocationData = { country: string; city: string };
 export type PasswordData = { password: string; isSecured: boolean };

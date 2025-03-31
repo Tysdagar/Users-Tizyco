@@ -1,26 +1,30 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ValidationModule } from './infraestructure/configuration/modules/validation.module';
-import { CommandsHandlerModule } from './infraestructure/configuration/modules/commands.module';
+import { CommandsModule } from './infraestructure/configuration/modules/commands.module';
 import { RepositoriesModule } from './infraestructure/configuration/modules/repositories.module';
 import { EnumSyncModule } from './infraestructure/configuration/modules/enum-sync.module';
 import { ServicesModule } from './infraestructure/configuration/modules/services.module';
 import { ConfigModule } from '@nestjs/config';
 import { EventsModule } from './infraestructure/configuration/modules/events.module';
-import { EndpointsModule } from './infraestructure/configuration/modules/endpoints.module';
+import { EndpointDiscoveryService } from './infraestructure/configuration/providers/endpoints.provider';
+import { UseCasesModule } from './infraestructure/configuration/modules/use-cases.module';
+import { ClientsModule } from './infraestructure/configuration/modules/clients.module';
 
 /**
  * Root application module for NestJS.
  */
 @Module({
   imports: [
-    EndpointsModule,
+    EndpointDiscoveryService.register(),
     RepositoriesModule,
     ServicesModule,
-    ValidationModule,
-    CommandsHandlerModule,
-    EnumSyncModule,
+    ClientsModule,
     EventsModule,
+    ValidationModule,
+    UseCasesModule,
+    CommandsModule,
+    EnumSyncModule,
     /**
      * CQRS module setup for command and query handling.
      */

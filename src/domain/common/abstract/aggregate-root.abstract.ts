@@ -22,9 +22,7 @@ export abstract class AggregateRoot {
   }
 
   public publishEvents(eventBus: IEventBus): void {
-    for (const event of this.domainEvents) {
-      eventBus.publish(event);
-    }
+    eventBus.publishAll(this.domainEvents);
 
     this.clearDomainEvents();
   }

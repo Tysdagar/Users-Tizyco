@@ -1,4 +1,4 @@
-import { IEmailService } from 'src/domain/common/interfaces/email-service.interface';
+import { IEmailService } from 'src/domain/common/interfaces/services/email-service.interface';
 
 /**
  * Abstract base class for email services.

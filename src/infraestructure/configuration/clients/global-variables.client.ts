@@ -1,3 +1,4 @@
+import { DomainException } from 'src/domain/common/errors/configuration/domain.exception';
 import { StateVariableMap } from 'src/domain/common/interfaces/services/state-sync.interface';
 
 /**
@@ -35,11 +36,14 @@ export class GlobalVariablesClient {
   /**
    * Retrieves the key corresponding to a value from the state map.
    * @param {string} value - The value to search for.
-   * @returns {string | undefined} The corresponding key, or undefined if not found.
+   * @returns {string} The corresponding key, or @throws error if not found.
    */
-  public static getKey(value: string): string | undefined {
+  public static getKey(value: string): string {
     const instance = GlobalVariablesClient.getInstance();
+    const key = instance.enumVariablesMap.get(value);
 
-    return instance.enumVariablesMap.get(value);
+    if (!key) throw new DomainException('hola'); // Mock
+
+    return key;
   }
 }

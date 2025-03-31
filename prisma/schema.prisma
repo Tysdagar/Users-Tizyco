@@ -5,16 +5,69 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["user"]
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  userId             String              @id @default(uuid())
+  firstName          String?             @db.VarChar(50)
+  lastName           String?             @db.VarChar(50)
+  email              String              @unique @db.VarChar(50)
+  password           String
+  country            String?             @db.VarChar(50)
+  gender             String?             @db.VarChar(50)
+  city               String?             @db.VarChar(50)
+  phone              String?             @db.VarChar(50)
+  userStatusId       String
+  userStatus         UserStatus          @relation(fields: [userStatusId], references: [userStatusId])
+  multifactorMethods MultifactorMethod[]
+
+  @@schema("user")
+}
+
+model UserStatus {
+  userStatusId String @id @default(uuid())
+  status       String @db.VarChar(50)
+  users        User[]
+
+  @@schema("user")
+}
+
+model MultifactorMethods {
+  supportedMethodId  String              @id @default(uuid())
+  method             String              @db.VarChar(50)
+  active             Boolean
+  multifactorMethods MultifactorMethod[]
+
+  @@schema("user")
+}
+
+model MultifactorMethod {
+  multifactorMethodId String             @id @default(uuid())
+  contact             String             @db.VarChar(50)
+  active              Boolean
+  supportedMethodId   String
+  supportedMethod     MultifactorMethods @relation(fields: [supportedMethodId], references: [supportedMethodId])
+  userId              String
+  user                User               @relation(fields: [userId], references: [userId])
+  lastTimeUsed        DateTime
+  statusId            String
+  multifactorStatus   MultifactorStatus  @relation(fields: [statusId], references: [multifactorStatusId])
+
+  @@schema("user")
+}
+
+model MultifactorStatus {
+  multifactorStatusId String              @id @default(uuid())
+  status              String              @db.VarChar(50)
+  multifactorMethods  MultifactorMethod[]
+
+  @@schema("user")
 }

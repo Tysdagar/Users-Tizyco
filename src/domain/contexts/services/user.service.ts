@@ -28,12 +28,14 @@ export class UserService extends EntityService<User> {
 
   public async register(email: string, password: string): Promise<User> {
     return this.executeAsync(async () => {
-      return await User.create(this.passwordService, email, password);
+      const user = await User.create(this.passwordService, email, password);
+      this.configureEntity(user);
+      return user;
     });
   }
 
   public verifyAccount(): void {
-    return this.executeSync(() => {
+    return this.execute(() => {
       this.entity.verify();
     });
   }
@@ -49,7 +51,7 @@ export class UserService extends EntityService<User> {
   }
 
   public validateMultifactorCode(code: number): void {
-    return this.executeSync(() => {
+    return this.execute(() => {
       this.entity.validateMultifactorCode(code);
     });
   }

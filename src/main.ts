@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerClient } from './infraestructure/configuration/clients/swagger.client';
-import { GlobalExceptionFilter } from './infraestructure/filters/exception.filter';
+import { GlobalExceptionFilter } from './infraestructure/configuration/clients/global-exception.client';
 import 'reflect-metadata';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';

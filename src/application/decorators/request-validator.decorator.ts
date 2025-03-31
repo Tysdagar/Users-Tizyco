@@ -1,6 +1,5 @@
 import { SetMetadata } from '@nestjs/common';
 import { CustomValidator } from '../abstract/custom-validator.abstract';
-import { IUseCase } from 'src/domain/common/interfaces/concepts/use-case';
 
 /**
  * Custom metadata key used to associate a validator with a specific request type.
@@ -28,10 +27,10 @@ export const CUSTOM_VALIDATOR_KEY = 'CUSTOM_VALIDATOR_KEY';
  * }
  * ```
  */
-export function RequestValidator<T extends IUseCase<any, any>>(
-  requestType: new (...args: any[]) => T,
+export function RequestValidator<Request>(
+  requestType: new (...args: any[]) => Request,
 ) {
-  return function <U extends CustomValidator<T>>(target: {
+  return function <U extends CustomValidator<Request>>(target: {
     new (...args: any[]): U;
   }) {
     SetMetadata(CUSTOM_VALIDATOR_KEY, requestType)(target);

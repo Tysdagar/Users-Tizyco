@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ValidationModule } from './validation.module';
-import { EventsModule } from './events.module';
+import { RegisterUserCommandHandler } from 'src/infraestructure/features/commands/register-user/register-user.handler';
+import { UseCasesModule } from './use-cases.module';
 
 /**
  * The `CommandsHandlerModule` encapsulates all command handlers used
@@ -11,16 +11,16 @@ import { EventsModule } from './events.module';
   /**
    * Import required modules for command handling.
    */
-  imports: [ValidationModule, EventsModule],
+  imports: [UseCasesModule],
 
   /**
    * Define the command handlers for various application features.
    */
-  providers: [],
+  providers: [RegisterUserCommandHandler],
 
   /**
    * Export the command handlers to make them available for other modules.
    */
-  exports: [],
+  exports: [RegisterUserCommandHandler],
 })
-export class CommandsHandlerModule {}
+export class CommandsModule {}

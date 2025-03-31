@@ -1,66 +1,37 @@
-import { ConfigClient } from '../clients/config.client';
 import { EmailClient } from '../clients/email.client';
 import { Global, Module } from '@nestjs/common';
-import { PrismaClient } from '../clients/prisma.client';
 import { ENCRYPT_SERVICE } from 'src/domain/common/interfaces/services/encrypt-service.interface';
 import { EncryptService } from 'src/infraestructure/services/encrypt.service';
 import { SERIALIZE_SERVICE } from 'src/domain/common/interfaces/services/serialize-service.interface';
 import { SerializeService } from 'src/infraestructure/services/serialize.service';
-import { RedisClient } from '../clients/redis.client';
 import { DataTransformationService } from 'src/infraestructure/services/data-transform.service';
 import { EmailService } from 'src/application/services/email.service';
+import { UserService } from 'src/domain/contexts/services/user.service';
+import { PASSWORD_SECURITY_SERVICE } from 'src/domain/contexts/interfaces/password-security.interface';
+import { PasswordSecurityService } from 'src/infraestructure/services/password-security.service';
+import { LOGIN_ATTEMPTS_SERVICE } from 'src/domain/contexts/interfaces/login-attempts.interface';
+import { LoginAttemptService } from 'src/infraestructure/services/login-attempt.service';
+import { EventsModule } from './events.module';
 
-/**
- * The `ServicesModule` is a global module that centralizes the registration of shared services,
- * making them available across the application without needing explicit imports in other modules.
- *
- * This module provides essential utilities like password management, encryption, email handling,
- * data transformation, and authentication token generation.
- */
 @Global()
 @Module({
-  /**
-   * Dependencies required by the `ServicesModule`.
-   */
-  imports: [
-    /**
-     * The `AuthModule` is imported to provide authentication-related dependencies.
-     */
-  ],
+  imports: [EventsModule],
   providers: [
-    // Shared clients and services
-    PrismaClient,
-    RedisClient,
-    ConfigClient,
+    UserService,
     DataTransformationService,
 
-    /**
-     * The `EmailService` is provided using the `EmailClient` implementation.
-     * This service is responsible for handling email communication.
-     */
     { provide: EmailService, useClass: EmailClient },
-
-    /**
-     * The `ENCRYPT_SERVICE` is provided using the `EncryptService` implementation.
-     * This service handles encryption and decryption operations.
-     */
+    { provide: LOGIN_ATTEMPTS_SERVICE, useClass: LoginAttemptService },
+    { provide: PASSWORD_SECURITY_SERVICE, useClass: PasswordSecurityService },
     { provide: ENCRYPT_SERVICE, useClass: EncryptService },
-
-    /**
-     * The `SERIALIZE_SERVICE` is provided using the `SerializeService` implementation.
-     * This service is responsible for serializing and deserializing data.
-     */
     { provide: SERIALIZE_SERVICE, useClass: SerializeService },
   ],
   exports: [
-    /**
-     * Exported services and clients to make them available globally in the application.
-     */
-    PrismaClient,
-    ConfigClient,
-    RedisClient,
+    UserService,
     DataTransformationService,
+
     EmailService,
+    PASSWORD_SECURITY_SERVICE,
     ENCRYPT_SERVICE,
     SERIALIZE_SERVICE,
   ],

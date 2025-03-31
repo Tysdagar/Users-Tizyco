@@ -30,8 +30,11 @@ export class Authentication {
     this._password = new Password(newPassword);
   }
 
-  public securePassword(passwordService: IPasswordSecurityService) {
-    this._password = new Password(passwordService.secure(this.password), true);
+  public async securePassword(passwordService: IPasswordSecurityService) {
+    this._password = new Password(
+      await passwordService.secure(this.password),
+      true,
+    );
   }
 
   get email(): string {
