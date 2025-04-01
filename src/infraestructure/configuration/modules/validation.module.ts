@@ -8,6 +8,7 @@ import {
 } from 'src/domain/common/interfaces/services/validation-service.interface';
 import { ValidationService } from 'src/infraestructure/services/validation.service';
 import { RegisterUserValidator } from 'src/application/use-cases/register-user/register-user.validator';
+import { RequestUserVerificationValidator } from 'src/application/use-cases/request-verification/request-user-verification.validator';
 
 /**
  * The `ValidationModule` is responsible for registering and managing
@@ -28,6 +29,7 @@ import { RegisterUserValidator } from 'src/application/use-cases/register-user/r
   providers: [
     // Command and query validators
     RegisterUserValidator,
+    RequestUserVerificationValidator,
     /**
      * The `ValidatorsProvider` is responsible for discovering and managing
      * the mapping between commands/queries and their validators.

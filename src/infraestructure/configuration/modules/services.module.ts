@@ -12,6 +12,8 @@ import { PasswordSecurityService } from 'src/infraestructure/services/password-s
 import { LOGIN_ATTEMPTS_SERVICE } from 'src/domain/contexts/interfaces/login-attempts.interface';
 import { LoginAttemptService } from 'src/infraestructure/services/login-attempt.service';
 import { EventsModule } from './events.module';
+import { VERIFICATION_USER_SERVICE } from 'src/domain/contexts/interfaces/verification-account.interface';
+import { VerificationUserService } from 'src/infraestructure/services/verification-user.service';
 
 @Global()
 @Module({
@@ -21,6 +23,7 @@ import { EventsModule } from './events.module';
     DataTransformationService,
 
     { provide: EmailService, useClass: EmailClient },
+    { provide: VERIFICATION_USER_SERVICE, useClass: VerificationUserService },
     { provide: LOGIN_ATTEMPTS_SERVICE, useClass: LoginAttemptService },
     { provide: PASSWORD_SECURITY_SERVICE, useClass: PasswordSecurityService },
     { provide: ENCRYPT_SERVICE, useClass: EncryptService },
@@ -31,6 +34,8 @@ import { EventsModule } from './events.module';
     DataTransformationService,
 
     EmailService,
+    VERIFICATION_USER_SERVICE,
+    LOGIN_ATTEMPTS_SERVICE,
     PASSWORD_SECURITY_SERVICE,
     ENCRYPT_SERVICE,
     SERIALIZE_SERVICE,

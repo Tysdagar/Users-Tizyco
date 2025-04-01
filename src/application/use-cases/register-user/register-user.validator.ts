@@ -21,7 +21,7 @@ export class RegisterUserValidator extends CustomValidator<RegisterUserRequest> 
       this.registerFailure('Contraseña', 'Las contraseñas no coinciden.');
     }
 
-    const exists = await this.userRepository.existsByEmail(request.email);
+    const exists = await this.userRepository.existsUserByEmail(request.email);
 
     if (exists) {
       this.registerFailure('Usuario Existente', 'Este usuario ya existe.');

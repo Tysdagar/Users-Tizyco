@@ -6,7 +6,7 @@ export class FullName extends ValueObject<FullNameData> {
     /[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s'-]/;
   private static readonly MAX_NAME_LENGTH: number = 50;
 
-  constructor(firstName?: string, lastName?: string) {
+  constructor(firstName: string | null, lastName: string | null) {
     super({ firstName, lastName });
   }
 
@@ -29,7 +29,7 @@ export class FullName extends ValueObject<FullNameData> {
       this.validateName('Apellido', lastName);
     }
 
-    return this.hasNoErrors ();
+    return this.hasNoErrors();
   }
 
   private validateName(fieldName: string, name: string): void {

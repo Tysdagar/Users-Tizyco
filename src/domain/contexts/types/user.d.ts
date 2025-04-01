@@ -1,10 +1,32 @@
+import { Authentication } from '../entities/authentication/user-authentication.entity';
+import { UserInformation } from '../entities/information/user-information.entity';
+import { Multifactor } from '../entities/multifactor/user-multifactor.entity';
+
 export interface UserInformationParams {
-  firstName?: string;
-  lastName?: string;
-  country?: string;
-  city?: string;
-  phone?: string;
-  gender?: string;
+  firstName: string | null;
+  lastName: string | null;
+  country: string | null;
+  city: string | null;
+  phone: string | null;
+  gender: string | null;
+}
+
+export interface UserParams {
+  userId: string;
+  authentication: Authentication;
+  status: string;
+  information?: UserInformation;
+  multifactorMethods?: Multifactor[];
+}
+
+export interface MultifactorMethodParams {
+  multifactorId: string;
+  method: string;
+  contact: string;
+  active: boolean;
+  verified: boolean;
+  status: string;
+  lastTimeUsed: Date | null;
 }
 
 export interface UserCreatedProperties {
@@ -14,7 +36,16 @@ export interface UserCreatedProperties {
   status: string;
 }
 
-export type FullNameData = { firstName?: string; lastName?: string };
+export interface VerificationUserData {
+  userId: string;
+  code: string;
+  expiresDate: Date;
+}
+
+export type FullNameData = {
+  firstName: string | null;
+  lastName: string | null;
+};
 export type LocationData = { country: string; city: string };
 export type PasswordData = { password: string; isSecured: boolean };
 export type AuthenticationChannelData = { method: string; contact: string };

@@ -14,10 +14,14 @@ import { UserStatus } from './configuration/status.configuration';
 import { Status } from './value-objects/status.vo';
 
 import {
-  UserCreatedProperties,
+  type UserCreatedProperties,
+  type UserParams,
   type UserInformationParams,
 } from '../types/user';
 import { MultifactorInitializedEvent } from './events/multifactor-initialized.event';
+import { IVerificationUserService } from '../interfaces/verification-account.interface';
+import { InitalizedUserVerificationEvent } from './events/requested-verification.event';
+import { VerificationCodeGenerator } from './configuration/verification-code.configuration';
 
 /**
  * Represents the User aggregate root in the domain layer.
@@ -72,6 +76,16 @@ export class User extends AggregateRoot {
     return user;
   }
 
+  public static build(params: UserParams) {
+    return new User(
+      params.userId,
+      params.authentication,
+      new Status(params.status),
+      params.information,
+      params.multifactorMethods,
+    );
+  }
+
   // Multifactor Operations
 
   /**
@@ -111,8 +125,8 @@ export class User extends AggregateRoot {
    */
   private initializeMultifactorAuthentication(multifactor: Multifactor): void {
     multifactor.initialize();
-    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_INITIALIZED');
     this.triggerMultifactorInitializedEvent(multifactor);
+    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_INITIALIZED');
   }
 
   /**
@@ -122,8 +136,8 @@ export class User extends AggregateRoot {
    */
   private retryMultifactorAuthentication(multifactor: Multifactor): void {
     multifactor.initialize();
-    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_REINITIALIZED');
     this.triggerMultifactorInitializedEvent(multifactor);
+    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_REINITIALIZED');
   }
 
   /**
@@ -174,15 +188,6 @@ export class User extends AggregateRoot {
   // Status Management
 
   /**
-   * Marks the user as verified.
-   */
-  public verify(): void {
-    if (this.isStatus(UserStatus.VERIFIED))
-      USER_EXCEPTION_FACTORY.throw('USER_ALREADY_VERIFIED');
-    this._status = new Status(UserStatus.VERIFIED);
-  }
-
-  /**
    * Activates the user's account.
    */
   public activate(): void {
@@ -228,6 +233,43 @@ export class User extends AggregateRoot {
     return this._status.value === (status as string);
   }
 
+  // Verification User Operations
+
+  public async requestVerification(
+    verificationUserService: IVerificationUserService,
+  ) {
+    this.checkUserVerifiedStatus();
+    await this.checkUserVerificationInProgress(verificationUserService);
+    const payload = VerificationCodeGenerator.generate(this.id);
+    await verificationUserService.saveVerificationData(payload);
+    this.triggerInitializedUserVerificationEvent(payload.code);
+  }
+
+  public verify(): void {
+    this.checkUserVerifiedStatus();
+    this._status = new Status(UserStatus.VERIFIED);
+  }
+
+  private checkUserVerifiedStatus() {
+    if (this.isStatus(UserStatus.VERIFIED))
+      USER_EXCEPTION_FACTORY.throw('USER_ALREADY_VERIFIED');
+  }
+
+  private async checkUserVerificationInProgress(
+    verificationUserService: IVerificationUserService,
+  ) {
+    const code = await verificationUserService.getVerificationCode(this.id);
+
+    if (code) {
+      if (VerificationCodeGenerator.checkIsExpired(code.expiresDate)) {
+        await verificationUserService.removeVerificationData(this.id);
+        return;
+      }
+
+      throw USER_EXCEPTION_FACTORY.throw('VERIFICATION_USER_IN_PROGRESS');
+    }
+  }
+
   // Login Operations
 
   /**
@@ -237,7 +279,7 @@ export class User extends AggregateRoot {
    * @param passwordService - Service to validate the password.
    * @param password - Password provided by the user.
    */
-  public async tryLogin(
+  public async login(
     loginAttemptService: ILoginAttemptService,
     passwordService: IPasswordSecurityService,
     password: string,
@@ -341,6 +383,10 @@ export class User extends AggregateRoot {
 
   private triggerMultifactorInitializedEvent(multifactor: Multifactor) {
     this.addEvent(new MultifactorInitializedEvent(this.id, multifactor));
+  }
+
+  private triggerInitializedUserVerificationEvent(code: string) {
+    this.addEvent(new InitalizedUserVerificationEvent(this.id, code));
   }
 
   // Getters

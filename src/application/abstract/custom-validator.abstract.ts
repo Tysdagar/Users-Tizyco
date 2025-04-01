@@ -97,7 +97,7 @@ export abstract class CustomValidator<Request>
    * @template Data - The type of the validated data.
    * @param data - The data to store as validated.
    */
-  public setValidatedData<Data>(data: Data): void {
+  public saveValidatedData<Data>(data: Data): void {
     this._validatedData = data;
   }
 

@@ -3,6 +3,13 @@ import { IUserRepository } from 'src/domain/contexts/repositories/user.repositor
 import { PrismaClient } from '../configuration/clients/prisma.client';
 import { GlobalVariablesClient } from '../configuration/clients/global-variables.client';
 import { Injectable } from '@nestjs/common';
+import { UserMapper } from '../mappers/user.mapper';
+import { UserPrismaDTO } from '../mappers/user.dto';
+import {
+  MultifactorMethod,
+  MultifactorMethods,
+  MultifactorStatus,
+} from '@prisma/client';
 
 @Injectable()
 export class PrismaUserRepository implements IUserRepository {
@@ -21,7 +28,99 @@ export class PrismaUserRepository implements IUserRepository {
     });
   }
 
-  public async existsByEmail(email: string): Promise<boolean> {
+  public async updateUserStatus(userId: string, status: string): Promise<void> {
+    await this.db.user.update({
+      where: { userId },
+      data: { userStatusId: GlobalVariablesClient.getKey(status) },
+    });
+  }
+
+  public async existsUserByEmail(email: string): Promise<boolean> {
     return (await this.db.user.findUnique({ where: { email } })) !== null;
+  }
+
+  public async findAuthDataWithMFA(userId: string): Promise<User | null> {
+    const user = await this.getUserById(userId, true);
+
+    if (!user) return null;
+
+    return UserMapper.buildWithMFAMethods(user);
+  }
+
+  public async findAuthDataWithPassword(userId: string): Promise<User | null> {
+    const user = await this.getUserById(userId);
+
+    if (!user) return null;
+
+    return UserMapper.buildAuthDataWithPassword(user);
+  }
+
+  public async findUserInfo(userId: string): Promise<User | null> {
+    const user = await this.getUserById(userId);
+
+    if (!user) return null;
+
+    return UserMapper.buildWithInformation(user);
+  }
+
+  public async findSecureAuthData(userId: string): Promise<User | null> {
+    const user = await this.getUserById(userId);
+
+    if (!user) return null;
+
+    return UserMapper.buildSecureAuthData(user);
+  }
+
+  private async getUserById(
+    userId: string,
+    includeMultifactors: boolean = false,
+  ): Promise<UserPrismaDTO | null> {
+    const user = await this.db.user.findUnique(
+      this.queryOptionsUserById(userId, includeMultifactors),
+    );
+
+    if (!user) return null;
+
+    const multifactorData = includeMultifactors
+      ? this.mapMultifactor(user.multifactorMethods)
+      : [];
+
+    return new UserPrismaDTO({
+      userData: { user, userStatus: user.userStatus },
+      multifactorMethods: multifactorData,
+    });
+  }
+
+  private mapMultifactor(multifactorMethods: MultifactorMethod[]) {
+    return (
+      multifactorMethods as Array<
+        MultifactorMethod & {
+          supportedMethod: MultifactorMethods;
+          multifactorStatus: MultifactorStatus;
+        }
+      >
+    ).map((multifactor) => ({
+      mfaInfo: multifactor,
+      mfaMethod: multifactor.supportedMethod,
+      mfaStatus: multifactor.multifactorStatus,
+    }));
+  }
+
+  private queryOptionsUserById(userId: string, includeMultifactors: boolean) {
+    return {
+      where: { userId },
+      include: {
+        userStatus: true,
+        multifactorMethods: includeMultifactors
+          ? {
+              where: { active: true },
+              include: {
+                supportedMethod: true,
+                multifactorStatus: true,
+              },
+            }
+          : false,
+      },
+    };
   }
 }

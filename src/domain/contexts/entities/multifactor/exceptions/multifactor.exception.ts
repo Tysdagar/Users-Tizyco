@@ -5,7 +5,8 @@ import { MultifactorExceptionMessages } from './multifactor-exceptions.enum';
 export class MultifactorException extends DomainEntityException<
   typeof MultifactorExceptionMessages
 > {
-  constructor(message: MultifactorExceptionMessages) {
+  constructor(errorKey: keyof typeof MultifactorExceptionMessages) {
+    const message = MultifactorExceptionMessages[errorKey];
     super(
       EntitiesTriggersExceptions.MULTIFACTOR,
       MultifactorExceptionMessages,

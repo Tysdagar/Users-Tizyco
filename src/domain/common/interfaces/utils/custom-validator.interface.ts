@@ -45,7 +45,7 @@ export interface ICustomValidator<Request> {
    * @typeParam Data - The type of the validated data.
    * @param data - The validated data to store.
    */
-  setValidatedData<Data>(data: Data): void;
+  saveValidatedData<Data>(data: Data): void;
 
   /**
    * Retrieves the previously validated data.

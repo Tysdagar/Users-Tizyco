@@ -17,6 +17,17 @@ export class UserInformation {
     return new UserInformation();
   }
 
+  public static build(information: UserInformationParams): UserInformation {
+    const userInfo = this.initialize();
+
+    userInfo.updateFullName(information);
+    userInfo.updateGender(information);
+    userInfo.updateContact(information);
+    userInfo.updateLocation(information);
+
+    return userInfo;
+  }
+
   public update(information: UserInformationParams): void {
     if (!this.canUpdateInformation(information)) {
       INFO_EXCEPTION_FACTORY.throw('NO_INFORMATION_PROPERTIES_TO_UPDATE');
@@ -56,7 +67,7 @@ export class UserInformation {
     }
   }
 
-  private setFullName(firstName?: string, lastName?: string): void {
+  private setFullName(firstName: string | null, lastName: string | null): void {
     this.fullName = new FullName(firstName, lastName);
   }
 

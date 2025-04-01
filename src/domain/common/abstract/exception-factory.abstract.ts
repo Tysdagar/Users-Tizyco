@@ -3,7 +3,9 @@ import { ValidationException } from '../errors/validation.exception';
 
 export abstract class ExceptionFactoryBase<
   Messages extends Record<string, string>,
-  Exception extends new (message: string) => DomainEntityException<Messages>,
+  Exception extends new (
+    message: keyof Messages,
+  ) => DomainEntityException<Messages>,
 > {
   constructor(
     private readonly messages: Messages,
@@ -16,8 +18,7 @@ export abstract class ExceptionFactoryBase<
   }
 
   public throw(errorKey: keyof Messages): never | Exception {
-    const message = this.messages[errorKey];
-    throw new this.exceptionRef(message);
+    throw new this.exceptionRef(errorKey);
   }
 
   public throwValidation(errorKey: keyof Messages): never {

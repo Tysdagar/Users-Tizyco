@@ -39,7 +39,10 @@ export class RegisterUserUseCase extends UserUseCase<
 
     await this.userRepository.save(user);
 
-    this.userEventPublisher.registered(user);
+    this.userEventPublisher.registered(
+      user.createdState.userId,
+      user.createdState.email,
+    );
 
     return Response.message('Usuario creado exitosamente.');
   }

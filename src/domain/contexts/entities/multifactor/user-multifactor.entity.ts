@@ -4,28 +4,38 @@ import { AuthenticationChannel } from './value-objects/authentication-channel.vo
 import { Code } from './value-objects/code.vo';
 import { MultifactorStatus } from './value-objects/mfa-status.vo';
 import { MULTIFACTOR_EXCEPTION_FACTORY } from './exceptions/multifactor-exception.factory';
+import { type MultifactorMethodParams } from '../../types/user';
 
 export class Multifactor {
-  private readonly _multifactorId: string;
-  private readonly _authenticationChannel: AuthenticationChannel;
-  private _active = false;
-  private _verified = false;
-  private _status = new MultifactorStatus(MFAStatus.NOT_STARTED);
-  private _code: Code | null = null;
-  private _lastTimeUsed: Date | null = null;
-
   private constructor(
-    multifactorId: string,
-    authenticationChannel: AuthenticationChannel,
+    private readonly _multifactorId: string,
+    private readonly _authenticationChannel: AuthenticationChannel,
+    private _active = false,
+    private _verified = false,
+    private _status = new MultifactorStatus(MFAStatus.NOT_STARTED),
+    private _code: Code | null = null,
+    private _lastTimeUsed: Date | null = null,
   ) {
-    this._multifactorId = multifactorId;
-    this._authenticationChannel = authenticationChannel;
+    this._multifactorId = _multifactorId;
+    this._authenticationChannel = _authenticationChannel;
   }
 
   public static create(method: string, contact: string): Multifactor {
     return new Multifactor(
       randomUUID(),
       new AuthenticationChannel(method, contact),
+    );
+  }
+
+  public static build(params: MultifactorMethodParams) {
+    return new Multifactor(
+      params.multifactorId,
+      new AuthenticationChannel(params.method, params.contact),
+      params.active,
+      params.verified,
+      new MultifactorStatus(params.status),
+      null,
+      params.lastTimeUsed,
     );
   }
 
@@ -136,14 +146,14 @@ export class Multifactor {
   }
 
   private get isInitialized(): boolean {
-    return this._status.value === MFAStatus.INITIALIZED;
+    return this._status.value === (MFAStatus.INITIALIZED as string);
   }
 
   private get isAuthenticated(): boolean {
-    return this._status.value === MFAStatus.AUTHENTICATED;
+    return this._status.value === (MFAStatus.AUTHENTICATED as string);
   }
 
   private get isExpired(): boolean {
-    return this._status.value === MFAStatus.EXPIRED;
+    return this._status.value === (MFAStatus.EXPIRED as string);
   }
 }

@@ -17,6 +17,7 @@ export abstract class UserUseCase<TRequest, TResult>
     const user = this.validationService.retrieveValidatedData<User>();
 
     if (user) {
+      console.log(user);
       this.userService.configureEntity(user);
     }
 

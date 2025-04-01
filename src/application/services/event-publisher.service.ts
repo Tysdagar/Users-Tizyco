@@ -3,9 +3,9 @@ import {
   EVENT_BUS,
   IEventBus,
 } from 'src/domain/common/interfaces/concepts/event-bus.interface';
-import { User } from 'src/domain/contexts/aggregate/user.aggregate';
-import { RegisteredUserEvent } from '../events/register-user.event';
+import { RegisteredUserEvent } from '../events/registered-user.event';
 import { IEvent } from 'src/domain/common/interfaces/concepts/event.interface';
+import { RequestedUserVerificationEvent } from '../events/requested-user-verification.event';
 
 @Injectable()
 export class UserEventPublisher {
@@ -14,8 +14,12 @@ export class UserEventPublisher {
     private readonly eventBus: IEventBus,
   ) {}
 
-  public registered(user: User) {
-    this.publish(new RegisteredUserEvent(user.id, user.email));
+  public registered(userId: string, email: string) {
+    this.publish(new RegisteredUserEvent(userId, email));
+  }
+
+  public requestedVerification(userId: string) {
+    this.publish(new RequestedUserVerificationEvent(userId));
   }
 
   private publish(event: IEvent): void {

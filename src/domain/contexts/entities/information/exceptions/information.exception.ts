@@ -5,7 +5,8 @@ import { InformationExceptionMessages } from './information-exceptions';
 export class InformationException extends DomainEntityException<
   typeof InformationExceptionMessages
 > {
-  constructor(message: InformationExceptionMessages) {
+  constructor(errorKey: keyof typeof InformationExceptionMessages) {
+    const message = InformationExceptionMessages[errorKey];
     super(
       EntitiesTriggersExceptions.INFORMATION,
       InformationExceptionMessages,

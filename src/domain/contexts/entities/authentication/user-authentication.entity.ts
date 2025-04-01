@@ -1,3 +1,4 @@
+import { DomainException } from 'src/domain/common/errors/configuration/domain.exception';
 import { IPasswordSecurityService } from '../../interfaces/password-security.interface';
 import { AUTH_EXCEPTION_FACTORY } from './exceptions/authentication-exception.factory';
 import { Email } from './value-objects/email.vo';
@@ -6,7 +7,7 @@ import { Password } from './value-objects/password.vo';
 export class Authentication {
   private constructor(
     private _email: Email,
-    private _password: Password,
+    private _password?: Password,
   ) {
     this._email = _email;
     this._password = _password;
@@ -14,6 +15,12 @@ export class Authentication {
 
   public static create(email: string, password: string): Authentication {
     return new Authentication(new Email(email), new Password(password));
+  }
+
+  public static build(email: string, password?: string): Authentication {
+    const auth = new Authentication(new Email(email));
+    if (password) auth.setSecurePassword(password);
+    return auth;
   }
 
   public updateEmail(newEmail: string) {
@@ -31,10 +38,11 @@ export class Authentication {
   }
 
   public async securePassword(passwordService: IPasswordSecurityService) {
-    this._password = new Password(
-      await passwordService.secure(this.password),
-      true,
-    );
+    this.setSecurePassword(await passwordService.secure(this.password));
+  }
+
+  private setSecurePassword(password: string) {
+    this._password = new Password(password, true);
   }
 
   get email(): string {
@@ -42,6 +50,8 @@ export class Authentication {
   }
 
   get password(): string {
+    if (!this._password)
+      throw new DomainException('No se obtuvo correctamente la contraseña');
     return this._password.value.password;
   }
 }

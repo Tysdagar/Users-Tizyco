@@ -53,6 +53,7 @@ model MultifactorMethod {
   multifactorMethodId String             @id @default(uuid())
   contact             String             @db.VarChar(50)
   active              Boolean
+  verified            Boolean
   supportedMethodId   String
   supportedMethod     MultifactorMethods @relation(fields: [supportedMethodId], references: [supportedMethodId])
   userId              String

@@ -7,4 +7,5 @@ export enum UserExceptionMessages {
   INVALID_CREDENTIALS = 'Las credenciales proporcionadas son incorrectas',
   USER_ALREADY_VERIFIED = 'El usuario ya se encuentra verificado.',
   NO_MULTIFACTOR_CODE_TO_VALIDATE = 'No existe el codigo multifactor a validar.',
+  VERIFICATION_USER_IN_PROGRESS = 'Ya se ha solicitado la verificacion del usuario, puede canjear el codigo de seguridad para completar la verificacion',
 }
