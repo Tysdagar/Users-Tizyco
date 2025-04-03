@@ -10,7 +10,7 @@ export class VerificationUserService implements IVerificationUserService {
 
   constructor(private readonly rd: RedisClient) {}
 
-  public async saveVerificationData(data: VerificationUserData): Promise<void> {
+  public async saveVerificationCodeData(data: VerificationUserData): Promise<void> {
     const verificationDataKey = `${this.VERIFICATION_KEY}:${data.userId}`;
 
     const verificationDataValue = JSON.stringify({
@@ -26,7 +26,7 @@ export class VerificationUserService implements IVerificationUserService {
     );
   }
 
-  public async getVerificationCode(
+  public async getVerificationCodeData(
     userId: string,
   ): Promise<VerificationUserData | null> {
     const verificationDataKey = `${this.VERIFICATION_KEY}:${userId}`;
@@ -51,7 +51,7 @@ export class VerificationUserService implements IVerificationUserService {
     };
   }
 
-  public async removeVerificationData(userId: string): Promise<void> {
+  public async removeVerificationCodeData(userId: string): Promise<void> {
     const verificationDataKey = `${this.VERIFICATION_KEY}:${userId}`;
 
     await this.rd.execute.del(verificationDataKey);

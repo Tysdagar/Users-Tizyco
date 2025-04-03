@@ -25,7 +25,8 @@ import { VerificationCodeGenerator } from './configuration/verification-code.con
 
 /**
  * Represents the User aggregate root in the domain layer.
- * Handles operations related to user authentication, multifactor authentication, user information, and status.
+ * Handles operations related to user authentication, multifactor authentication,
+ * user information, and status.
  */
 export class User extends AggregateRoot {
   /**
@@ -56,6 +57,7 @@ export class User extends AggregateRoot {
   /**
    * Creates a new user with the specified email and password.
    *
+   * @param passwordService - Password security service for hashing
    * @param email - User's email.
    * @param password - User's password.
    * @returns A new User instance.
@@ -76,7 +78,14 @@ export class User extends AggregateRoot {
     return user;
   }
 
-  public static build(params: UserParams) {
+  /**
+   * Builds a user instance from existing properties.
+   *
+   * @param params - User parameters including userId, authentication,
+   *                 status, information, and multifactor methods.
+   * @returns A new User instance constructed from the provided parameters.
+   */
+  public static build(params: UserParams): User {
     return new User(
       params.userId,
       params.authentication,
@@ -108,7 +117,13 @@ export class User extends AggregateRoot {
     return this._multifactorMethods.find((method) => method.isActive);
   }
 
-  public validateMultifactorCode(code: number) {
+  /**
+   * Validates a multifactor authentication code against the user's active method.
+   *
+   * @param code - The code to validate.
+   * @throws {UserException} If no active multifactor method is found or if validation fails.
+   */
+  public validateMultifactorCode(code: number): void {
     const multifactor = this.getActiveMultifactorMethod();
 
     if (!multifactor) {
@@ -145,6 +160,7 @@ export class User extends AggregateRoot {
    *
    * @param multifactor - The multifactor method that caused the exception.
    * @param error - The exception thrown.
+   * @throws Re-throws the error if not a MultifactorException or if not handled.
    */
   private handleMultifactorException(
     multifactor: Multifactor,
@@ -165,6 +181,7 @@ export class User extends AggregateRoot {
    *
    * @param email - New email for the user (optional).
    * @param password - New password for the user (optional).
+   * @throws {UserException} If neither email nor password is provided.
    */
   public updateAuthentication(email?: string, password?: string): void {
     if (!email && !password) {
@@ -210,6 +227,7 @@ export class User extends AggregateRoot {
 
   /**
    * Blocks the user's account and throws an exception.
+   * @throws {UserException} With 'USER_BLOCKED' message
    */
   public block(): void {
     this._status = new Status(UserStatus.BLOCKED);
@@ -235,38 +253,95 @@ export class User extends AggregateRoot {
 
   // Verification User Operations
 
+  /**
+   * Requests user verification by generating and saving a verification code.
+   *
+   * @param verificationUserService - Service to handle verification operations.
+   * @throws {UserException} If user is already verified or verification is in progress.
+   */
   public async requestVerification(
     verificationUserService: IVerificationUserService,
-  ) {
+  ): Promise<void> {
     this.checkUserVerifiedStatus();
     await this.checkUserVerificationInProgress(verificationUserService);
     const payload = VerificationCodeGenerator.generate(this.id);
-    await verificationUserService.saveVerificationData(payload);
+    await verificationUserService.saveVerificationCodeData(payload);
     this.triggerInitializedUserVerificationEvent(payload.code);
   }
 
-  public verify(): void {
+  /**
+   * Verifies the user account using the provided code.
+   *
+   * @param verificationUserService - Service to handle verification operations.
+   * @param code - Verification code to validate.
+   * @throws {UserException} If verification fails for any reason.
+   */
+  public async verify(
+    verificationUserService: IVerificationUserService,
+    code: string,
+  ): Promise<void> {
     this.checkUserVerifiedStatus();
-    this._status = new Status(UserStatus.VERIFIED);
+    await this.checkVerificationCode(verificationUserService, code);
+    this.activate();
   }
 
-  private checkUserVerifiedStatus() {
+  /**
+   * Checks if user is already verified.
+   * @throws {UserException} If user is already verified.
+   */
+  private checkUserVerifiedStatus(): void {
     if (this.isStatus(UserStatus.VERIFIED))
       USER_EXCEPTION_FACTORY.throw('USER_ALREADY_VERIFIED');
   }
 
+  /**
+   * Checks if there's an existing verification in progress.
+   *
+   * @param verificationUserService - Service to check verification status.
+   * @throws {UserException} If verification is already in progress.
+   */
   private async checkUserVerificationInProgress(
     verificationUserService: IVerificationUserService,
-  ) {
-    const code = await verificationUserService.getVerificationCode(this.id);
+  ): Promise<void> {
+    const code = await verificationUserService.getVerificationCodeData(this.id);
 
     if (code) {
       if (VerificationCodeGenerator.checkIsExpired(code.expiresDate)) {
-        await verificationUserService.removeVerificationData(this.id);
+        await verificationUserService.removeVerificationCodeData(this.id);
         return;
       }
 
       throw USER_EXCEPTION_FACTORY.throw('VERIFICATION_USER_IN_PROGRESS');
+    }
+  }
+
+  /**
+   * Validates the verification code against stored data.
+   *
+   * @param verificationUserService - Service to retrieve verification data.
+   * @param code - Code to validate.
+   * @throws {UserException} If code is invalid, expired, or not requested.
+   */
+  private async checkVerificationCode(
+    verificationUserService: IVerificationUserService,
+    code: string,
+  ): Promise<void> {
+    const verificationCode =
+      await verificationUserService.getVerificationCodeData(this.id);
+
+    if (!verificationCode) {
+      throw USER_EXCEPTION_FACTORY.throw('VERIFICATION_USER_NOT_REQUESTED');
+    }
+
+    if (
+      VerificationCodeGenerator.checkIsExpired(verificationCode.expiresDate)
+    ) {
+      throw USER_EXCEPTION_FACTORY.throw('VERIFICATION_USER_CODE_EXPIRED');
+    }
+
+    if (code !== verificationCode.code) {
+      await verificationUserService.removeVerificationCodeData(this.id);
+      throw USER_EXCEPTION_FACTORY.throw('INVALID_VERIFICATION_USER_CODE');
     }
   }
 
@@ -278,6 +353,7 @@ export class User extends AggregateRoot {
    * @param loginAttemptService - Service to manage login attempts.
    * @param passwordService - Service to validate the password.
    * @param password - Password provided by the user.
+   * @throws {UserException} If login fails for any reason.
    */
   public async login(
     loginAttemptService: ILoginAttemptService,
@@ -301,6 +377,7 @@ export class User extends AggregateRoot {
    * @param loginAttemptService - Service to manage login attempts.
    * @param passwordService - Service to validate the password.
    * @param password - Password provided by the user.
+   * @throws {UserException} If credentials are invalid.
    */
   private async validateCredentials(
     loginAttemptService: ILoginAttemptService,
@@ -321,6 +398,7 @@ export class User extends AggregateRoot {
 
   /**
    * Checks for active multifactor authentication and handles it accordingly.
+   * @throws {UserException} If multifactor authentication is required.
    */
   private checkMultifactorAuthentication(): void {
     const activeMethod = this.getActiveMultifactorMethod();
@@ -369,6 +447,7 @@ export class User extends AggregateRoot {
 
   /**
    * Validates if the user's status allows login.
+   * @throws {UserException} If user is blocked or deleted.
    */
   private checkValidUserStatus(): void {
     if (this.isStatus(UserStatus.BLOCKED)) {
@@ -381,20 +460,44 @@ export class User extends AggregateRoot {
 
   // Events
 
-  private triggerMultifactorInitializedEvent(multifactor: Multifactor) {
+  /**
+   * Triggers an event when multifactor authentication is initialized.
+   * @param multifactor - The multifactor method being initialized.
+   */
+  private triggerMultifactorInitializedEvent(multifactor: Multifactor): void {
     this.addEvent(new MultifactorInitializedEvent(this.id, multifactor));
   }
 
-  private triggerInitializedUserVerificationEvent(code: string) {
+  /**
+   * Triggers an event when user verification is initialized.
+   * @param code - The verification code being sent.
+   */
+  private triggerInitializedUserVerificationEvent(code: string): void {
     this.addEvent(new InitalizedUserVerificationEvent(this.id, code));
   }
 
   // Getters
 
-  get email() {
+  /**
+   * Gets the user's email address.
+   * @returns The user's email.
+   */
+  get email(): string {
     return this._authentication.email;
   }
 
+  /**
+   * Gets the user's current status.
+   * @returns The current status value.
+   */
+  get status(): string {
+    return this._status.value;
+  }
+
+  /**
+   * Gets the initial creation properties of the user.
+   * @returns Object containing userId, email, password, and status.
+   */
   get createdState(): UserCreatedProperties {
     return {
       userId: this.id,

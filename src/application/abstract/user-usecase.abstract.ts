@@ -17,7 +17,6 @@ export abstract class UserUseCase<TRequest, TResult>
     const user = this.validationService.retrieveValidatedData<User>();
 
     if (user) {
-      console.log(user);
       this.userService.configureEntity(user);
     }
 
@@ -25,4 +24,8 @@ export abstract class UserUseCase<TRequest, TResult>
   }
 
   protected abstract handle(request: TRequest): Promise<TResult>;
+
+  protected get user() {
+    return this.userService.entity;
+  }
 }

@@ -46,9 +46,9 @@ export class UserService extends EntityService<User> {
     });
   }
 
-  public verifyAccount(): void {
-    return this.execute(() => {
-      this.entity.verify();
+  public async verifyAccount(code: string): Promise<void> {
+    return await this.executeAsync(async () => {
+      await this.entity.verify(this.verificationUserService, code);
     });
   }
 

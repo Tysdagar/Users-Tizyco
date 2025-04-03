@@ -2,9 +2,9 @@ import { EndpointResolver } from 'src/application/abstract/endpoint-resolver.abs
 import { RegisterUserBody } from './register-user.body';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import { Body, Controller, Post } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
-import { RegisterUserCommand } from './register-user.command';
 import { ApiTags } from '@nestjs/swagger';
+import { RegisterUserUseCase } from 'src/application/use-cases/register-user/register-user.usecase';
+import { RegisterUserRequest } from 'src/application/use-cases/register-user/register-user.request';
 
 @ApiTags('Usuarios')
 @Controller('user')
@@ -12,14 +12,22 @@ export class RegisterUserEndpoint extends EndpointResolver<
   RegisterUserBody,
   string
 > {
-  constructor(private readonly commandBus: CommandBus) {
+  constructor(private readonly registerUseCase: RegisterUserUseCase) {
     super();
   }
 
   @Post('register')
   public async execute(
-    @Body() request: RegisterUserBody,
+    @Body() body: RegisterUserBody,
   ): Promise<Response<string>> {
-    return await this.commandBus.execute(new RegisterUserCommand(request));
+    const { email, password, confirmatePassword } = body;
+
+    const request = new RegisterUserRequest(
+      email,
+      password,
+      confirmatePassword,
+    );
+
+    return await this.registerUseCase.execute(request);
   }
 }

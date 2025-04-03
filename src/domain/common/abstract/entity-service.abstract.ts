@@ -26,7 +26,7 @@ export abstract class EntityService<T extends AggregateRoot> {
     }
   }
 
-  protected get entity() {
+  public get entity() {
     this.ensureConfigured();
     return this._entity;
   }

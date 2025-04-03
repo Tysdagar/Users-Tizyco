@@ -8,7 +8,7 @@ export class EndpointDiscoveryService {
   static async register(): Promise<DynamicModule> {
     const endpointsPaths = path.join(
       __dirname,
-      '../../../infraestructure/features/{commands,queries}/**/',
+      '../../../infraestructure/features/{commands,queries,controllers}/**/',
       '*.endpoint.js',
     );
     const endpointFiles: string[] = glob.sync(endpointsPaths, {

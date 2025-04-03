@@ -16,13 +16,13 @@ import { ClientsModule } from './infraestructure/configuration/modules/clients.m
  */
 @Module({
   imports: [
+    UseCasesModule,
     EndpointDiscoveryService.register(),
     RepositoriesModule,
     ServicesModule,
     ClientsModule,
     EventsModule,
     ValidationModule,
-    UseCasesModule,
     CommandsModule,
     EnumSyncModule,
     /**
