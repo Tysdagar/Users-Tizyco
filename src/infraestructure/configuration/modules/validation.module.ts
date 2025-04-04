@@ -10,6 +10,7 @@ import { ValidationService } from 'src/infraestructure/services/validation.servi
 import { RegisterUserValidator } from 'src/application/use-cases/register-user/register-user.validator';
 import { RequestUserVerificationValidator } from 'src/application/use-cases/request-user-verification/request-user-verification.validator';
 import { VerifyUserValidator } from 'src/application/use-cases/verify-user/verify-user..validator';
+import { LoginUserValidator } from 'src/application/use-cases/login-user/login-user.validator';
 
 /**
  * The `ValidationModule` is responsible for registering and managing
@@ -32,6 +33,7 @@ import { VerifyUserValidator } from 'src/application/use-cases/verify-user/verif
     RegisterUserValidator,
     RequestUserVerificationValidator,
     VerifyUserValidator,
+    LoginUserValidator,
     /**
      * The `ValidatorsProvider` is responsible for discovering and managing
      * the mapping between commands/queries and their validators.

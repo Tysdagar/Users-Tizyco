@@ -1,13 +1,9 @@
-import { LoginUserRequest } from './register-user.request';
+import { LoginUserRequest } from './login-user.request';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import {
   IValidationService,
   VALIDATION_SERVICE,
 } from 'src/domain/common/interfaces/services/validation-service.interface';
-import {
-  IUserRepository,
-  USER_REPOSITORY,
-} from 'src/domain/contexts/repositories/user.repository';
 import { UserService } from 'src/domain/contexts/services/user.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { UserEventPublisher } from 'src/application/services/event-publisher.service';
@@ -19,8 +15,6 @@ export class LoginUserUseCase extends UserUseCase<
   Response<string>
 > {
   constructor(
-    @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
     private readonly userEventPublisher: UserEventPublisher,
     @Inject(VALIDATION_SERVICE)
     validationService: IValidationService<LoginUserRequest>,
@@ -30,17 +24,10 @@ export class LoginUserUseCase extends UserUseCase<
   }
 
   protected async handle(request: LoginUserRequest): Promise<Response<string>> {
-    const user = await this.userService.register(
-      request.email,
-      request.password,
-    );
-    await this.userRepository.save(user);
+    await this.userService.login(request.password);
 
-    this.userEventPublisher.registered(
-      user.createdState.userId,
-      user.createdState.email,
-    );
+    this.userEventPublisher.logged(this.user.id);
 
-    return Response.message('Usuario creado exitosamente.');
+    return Response.message('Usuario inicio sesion exitosamente');
   }
 }
