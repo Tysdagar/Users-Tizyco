@@ -5,24 +5,22 @@ import {
   USER_REPOSITORY,
 } from 'src/domain/contexts/repositories/user.repository';
 import { Inject, Injectable } from '@nestjs/common';
-import { RequestUserVerificationRequest } from './request-user-verification.request';
+import { LoginUserRequest } from './register-user.request';
 
 @Injectable()
-@RequestValidator(RequestUserVerificationRequest)
-export class RequestUserVerificationValidator extends CustomValidator<RequestUserVerificationRequest> {
+@RequestValidator(LoginUserRequest)
+export class RegisterUserValidator extends CustomValidator<LoginUserRequest> {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
   ) {
     super();
   }
 
-  public async validate(
-    request: RequestUserVerificationRequest,
-  ): Promise<boolean> {
-    const user = await this.userRepository.findSecureAuthData(request.userId);
+  public async validate(request: LoginUserRequest): Promise<boolean> {
+    const user = await this.userRepository.findSecureAuthData(request.email);
 
     if (!user) {
-      return this.failValidation('Usuario', 'Este usuario no existe.');
+      this.registerFailure('Usuario Existente', 'Este usuario no existe.');
     }
 
     this.saveValidatedData(user);

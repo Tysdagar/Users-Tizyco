@@ -1,4 +1,4 @@
-import { RegisterUserRequest } from './register-user.request';
+import { LoginUserRequest } from './register-user.request';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import {
   IValidationService,
@@ -14,8 +14,8 @@ import { UserEventPublisher } from 'src/application/services/event-publisher.ser
 import { UserUseCase } from 'src/application/abstract/user-usecase.abstract';
 
 @Injectable()
-export class RegisterUserUseCase extends UserUseCase<
-  RegisterUserRequest,
+export class LoginUserUseCase extends UserUseCase<
+  LoginUserRequest,
   Response<string>
 > {
   constructor(
@@ -23,15 +23,13 @@ export class RegisterUserUseCase extends UserUseCase<
     private readonly userRepository: IUserRepository,
     private readonly userEventPublisher: UserEventPublisher,
     @Inject(VALIDATION_SERVICE)
-    validationService: IValidationService<RegisterUserRequest>,
+    validationService: IValidationService<LoginUserRequest>,
     userService: UserService,
   ) {
     super(validationService, userService);
   }
 
-  protected async handle(
-    request: RegisterUserRequest,
-  ): Promise<Response<string>> {
+  protected async handle(request: LoginUserRequest): Promise<Response<string>> {
     const user = await this.userService.register(
       request.email,
       request.password,

@@ -20,7 +20,7 @@ export class VerifyUserValidator extends CustomValidator<VerifyUserRequest> {
     const user = await this.userRepository.findSecureAuthData(request.userId);
 
     if (!user) {
-      this.registerFailure('Usuario', 'Este usuario no existe.');
+      return this.failValidation('Usuario', 'Este usuario no existe.');
     }
 
     this.saveValidatedData(user);

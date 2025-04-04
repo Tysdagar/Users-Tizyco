@@ -40,15 +40,15 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   public async findAuthDataWithMFA(userId: string): Promise<User | null> {
-    const user = await this.getUserById(userId, true);
+    const user = await this.getUserById({ userId }, true);
 
     if (!user) return null;
 
     return UserMapper.buildWithMFAMethods(user);
   }
 
-  public async findAuthDataWithPassword(userId: string): Promise<User | null> {
-    const user = await this.getUserById(userId);
+  public async findAuthDataWithPassword(email: string): Promise<User | null> {
+    const user = await this.getUserById({ email });
 
     if (!user) return null;
 
@@ -56,7 +56,7 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   public async findUserInfo(userId: string): Promise<User | null> {
-    const user = await this.getUserById(userId);
+    const user = await this.getUserById({ userId });
 
     if (!user) return null;
 
@@ -64,7 +64,7 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   public async findSecureAuthData(userId: string): Promise<User | null> {
-    const user = await this.getUserById(userId);
+    const user = await this.getUserById({ userId });
 
     if (!user) return null;
 
@@ -72,12 +72,17 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   private async getUserById(
-    userId: string,
+    params: { userId?: string; email?: string },
     includeMultifactors: boolean = false,
   ): Promise<UserPrismaDTO | null> {
-    const user = await this.db.user.findUnique(
-      this.queryOptionsUserById(userId, includeMultifactors),
-    );
+    const whereClause = this.buildWhereClause(params);
+
+    if (!whereClause) return null; // Evitar llamadas inválidas
+
+    const user = await this.db.user.findUnique({
+      where: whereClause,
+      include: this.buildIncludeOptions(includeMultifactors),
+    });
 
     if (!user) return null;
 
@@ -106,21 +111,24 @@ export class PrismaUserRepository implements IUserRepository {
     }));
   }
 
-  private queryOptionsUserById(userId: string, includeMultifactors: boolean) {
+  private buildWhereClause(params: { userId?: string; email?: string }) {
+    if (params.userId) return { userId: params.userId };
+    if (params.email) return { email: params.email };
+    return null;
+  }
+
+  private buildIncludeOptions(includeMultifactors: boolean) {
     return {
-      where: { userId },
-      include: {
-        userStatus: true,
-        multifactorMethods: includeMultifactors
-          ? {
-              where: { active: true },
-              include: {
-                supportedMethod: true,
-                multifactorStatus: true,
-              },
-            }
-          : false,
-      },
+      userStatus: true,
+      multifactorMethods: includeMultifactors
+        ? {
+            where: { active: true },
+            include: {
+              supportedMethod: true,
+              multifactorStatus: true,
+            },
+          }
+        : false,
     };
   }
 }
