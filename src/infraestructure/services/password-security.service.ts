@@ -43,7 +43,7 @@ export class PasswordSecurityService implements IPasswordSecurityService {
    * @param value - The plain text value to verify.
    * @returns A promise that resolves to `true` if the values match, or `false` otherwise.
    */
-  public async check(valueHashed: string, value: string): Promise<boolean> {
+  public async check(value: string, valueHashed: string): Promise<boolean> {
     return await compare(value + this.SECRET, valueHashed);
   }
 }

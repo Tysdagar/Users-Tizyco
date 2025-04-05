@@ -1,4 +1,4 @@
-import { StateSyncService } from 'src/infraestructure/services/state-sync.service';
+import { StateSyncService } from 'src/infraestructure/helpers/state-sync.service';
 import { RepositoriesModule } from './repositories.module';
 import { Module } from '@nestjs/common';
 import { PrismaUserStatusDAO } from 'src/infraestructure/repositories/user-status.DAO';

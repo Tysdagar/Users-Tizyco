@@ -6,10 +6,10 @@ import {
   VALIDATION_SERVICE,
   VALIDATORS,
 } from 'src/domain/common/interfaces/services/validation-service.interface';
-import { ValidationService } from 'src/infraestructure/services/validation.service';
+import { ValidationService } from 'src/infraestructure/helpers/validation.service';
 import { RegisterUserValidator } from 'src/application/use-cases/register-user/register-user.validator';
 import { RequestUserVerificationValidator } from 'src/application/use-cases/request-user-verification/request-user-verification.validator';
-import { VerifyUserValidator } from 'src/application/use-cases/verify-user/verify-user..validator';
+import { VerifyUserValidator } from 'src/application/use-cases/verify-user/verify-user.validator';
 import { LoginUserValidator } from 'src/application/use-cases/login-user/login-user.validator';
 
 /**

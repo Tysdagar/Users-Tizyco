@@ -2,7 +2,7 @@
  * Represents a validation error that occurs when one or more validation rules fail.
  * Extends the `CustomError` class to include validation-specific details.
  */
-import { Failure } from '../interfaces/utils/custom-validator.interface';
+import { Failure } from '../interfaces/services/custom-validator.interface';
 import { ErrorCodes } from './configuration/enums/error-codes.enum';
 import { ErrorTypes } from './configuration/enums/error-types.enum';
 import { CustomError } from './configuration/custom-error.config';

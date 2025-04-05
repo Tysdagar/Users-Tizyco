@@ -41,17 +41,13 @@ export abstract class EntityService<T extends AggregateRoot> {
     );
   }
 
-  protected async executeAsync<TResult>(
+  protected async execute<TResult>(
     executer: () => TResult | Promise<TResult>,
   ): Promise<TResult> {
-    const result = await executer();
-    this.entity.publishEvents(this.eventBus);
-    return result;
-  }
-
-  protected execute<TResult>(executer: () => TResult): TResult {
-    const result = executer();
-    this.entity.publishEvents(this.eventBus);
-    return result;
+    try {
+      return await executer();
+    } finally {
+      this.entity.publishEvents(this.eventBus);
+    }
   }
 }

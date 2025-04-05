@@ -8,10 +8,6 @@ import {
 } from 'src/domain/common/interfaces/services/validation-service.interface';
 import { UserService } from 'src/domain/contexts/services/user.service';
 import { VerifyUserRequest } from './verify-user.request';
-import {
-  IUserRepository,
-  USER_REPOSITORY,
-} from 'src/domain/contexts/repositories/user.repository';
 
 @Injectable()
 export class VerifyUserUseCase extends UserUseCase<
@@ -20,8 +16,6 @@ export class VerifyUserUseCase extends UserUseCase<
 > {
   constructor(
     private readonly userEventPublisher: UserEventPublisher,
-    @Inject(USER_REPOSITORY)
-    private readonly userRepository: IUserRepository,
     @Inject(VALIDATION_SERVICE)
     validationService: IValidationService<VerifyUserRequest>,
     userService: UserService,
@@ -33,8 +27,6 @@ export class VerifyUserUseCase extends UserUseCase<
     request: VerifyUserRequest,
   ): Promise<Response<string>> {
     await this.userService.verifyAccount(request.verificationCode);
-
-    await this.userRepository.updateUserStatus(this.user.id, this.user.status);
 
     this.userEventPublisher.verified(this.user.id);
 

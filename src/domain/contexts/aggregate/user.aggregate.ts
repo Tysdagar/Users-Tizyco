@@ -17,11 +17,13 @@ import {
   type UserCreatedProperties,
   type UserParams,
   type UserInformationParams,
+  type ExposedUserData,
 } from '../types/user';
 import { MultifactorInitializedEvent } from './events/multifactor-initialized.event';
 import { IVerificationUserService } from '../interfaces/verification-account.interface';
 import { InitalizedUserVerificationEvent } from './events/requested-verification.event';
 import { VerificationCodeGenerator } from './configuration/verification-code.configuration';
+import { UserStatusChangedEvent } from './events/user-status-changed.event';
 
 /**
  * Represents the User aggregate root in the domain layer.
@@ -209,6 +211,7 @@ export class User extends AggregateRoot {
    */
   public activate(): void {
     this._status = new Status(UserStatus.VERIFIED);
+    this.triggerUserStatusChangedEvent();
   }
 
   /**
@@ -216,6 +219,7 @@ export class User extends AggregateRoot {
    */
   public deactivate(): void {
     this._status = new Status(UserStatus.INACTIVE);
+    this.triggerUserStatusChangedEvent();
   }
 
   /**
@@ -223,6 +227,7 @@ export class User extends AggregateRoot {
    */
   public delete(): void {
     this._status = new Status(UserStatus.DELETED);
+    this.triggerUserStatusChangedEvent();
   }
 
   /**
@@ -231,7 +236,7 @@ export class User extends AggregateRoot {
    */
   public block(): void {
     this._status = new Status(UserStatus.BLOCKED);
-    USER_EXCEPTION_FACTORY.throw('USER_BLOCKED');
+    this.triggerUserStatusChangedEvent();
   }
 
   /**
@@ -239,6 +244,7 @@ export class User extends AggregateRoot {
    */
   public unblock(): void {
     this._status = new Status(UserStatus.VERIFIED);
+    this.triggerUserStatusChangedEvent();
   }
 
   /**
@@ -360,14 +366,14 @@ export class User extends AggregateRoot {
     passwordService: IPasswordSecurityService,
     password: string,
   ): Promise<void> {
-    await this.checkTemporaryBlockStatus(loginAttemptService);
+    this.checkUserExists();
+    await this.checkUserBlocked(loginAttemptService);
     await this.validateCredentials(
       loginAttemptService,
       passwordService,
       password,
     );
     this.checkMultifactorAuthentication();
-    await this.checkLoginAttemptLimit(loginAttemptService);
     await loginAttemptService.resetAttempts(this.id);
   }
 
@@ -384,13 +390,13 @@ export class User extends AggregateRoot {
     passwordService: IPasswordSecurityService,
     password: string,
   ): Promise<void> {
-    const isPasswordCorrect = await passwordService.check(
+    const isPasswordCorrect = await this._authentication.checkCredentials(
       password,
-      this._authentication.password,
+      passwordService,
     );
-    if (isPasswordCorrect) {
-      this.checkValidUserStatus();
-    } else {
+
+    if (!isPasswordCorrect) {
+      await this.checkLoginAttemptLimit(loginAttemptService);
       await loginAttemptService.recordFailedAttempt(this.id);
       USER_EXCEPTION_FACTORY.throwValidation('INVALID_CREDENTIALS');
     }
@@ -421,9 +427,11 @@ export class User extends AggregateRoot {
     const hasExceededLimit = await loginAttemptService.hasExceededAttemptLimit(
       this.id,
     );
+
     if (hasExceededLimit) {
       this.block();
       await loginAttemptService.blockUserTemporarily(this.id);
+      USER_EXCEPTION_FACTORY.throw('USER_BLOCKED');
     }
   }
 
@@ -432,27 +440,30 @@ export class User extends AggregateRoot {
    *
    * @param loginAttemptService - Service to manage login attempts.
    */
-  private async checkTemporaryBlockStatus(
+  private async checkUserBlocked(
     loginAttemptService: ILoginAttemptService,
   ): Promise<void> {
     const isBlocked = this.isStatus(UserStatus.BLOCKED);
-    const isStillBlocked = await loginAttemptService.isTemporalyBlockedYet(
+    const isStillBlocked = await loginAttemptService.isTemporarilyBlockedYet(
       this.id,
     );
+
     if (isBlocked && !isStillBlocked) {
       this.unblock();
       await loginAttemptService.resetAttempts(this.id);
+      return;
+    }
+
+    if (isBlocked) {
+      USER_EXCEPTION_FACTORY.throwValidation('USER_BLOCKED');
     }
   }
 
   /**
-   * Validates if the user's status allows login.
-   * @throws {UserException} If user is blocked or deleted.
+   * Validates if the user's status is deleted.
+   * @throws {UserException} If user is deleted.
    */
-  private checkValidUserStatus(): void {
-    if (this.isStatus(UserStatus.BLOCKED)) {
-      USER_EXCEPTION_FACTORY.throw('USER_BLOCKED');
-    }
+  private checkUserExists() {
     if (this.isStatus(UserStatus.DELETED)) {
       USER_EXCEPTION_FACTORY.throwValidation('USER_DELETED');
     }
@@ -474,6 +485,13 @@ export class User extends AggregateRoot {
    */
   private triggerInitializedUserVerificationEvent(code: string): void {
     this.addEvent(new InitalizedUserVerificationEvent(this.id, code));
+  }
+
+  /**
+   * Triggers an event when user status has changed.
+   */
+  private triggerUserStatusChangedEvent() {
+    this.addEvent(new UserStatusChangedEvent(this.id, this.status));
   }
 
   // Getters
@@ -504,6 +522,15 @@ export class User extends AggregateRoot {
       email: this.email,
       password: this._authentication.password,
       status: this._status.value,
+    };
+  }
+
+  get userExposedData(): ExposedUserData {
+    return {
+      sub: this.id,
+      email: this.email,
+      fullName: this._information.fullName,
+      status: this.status,
     };
   }
 }

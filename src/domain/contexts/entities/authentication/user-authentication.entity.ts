@@ -100,6 +100,13 @@ export class Authentication {
     this._password = new Password(password, true);
   }
 
+  public async checkCredentials(
+    password: string,
+    passwordService: IPasswordSecurityService,
+  ) {
+    return await passwordService.check(password, this.password);
+  }
+
   // Getters
 
   /**

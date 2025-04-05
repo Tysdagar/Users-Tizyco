@@ -5,5 +5,5 @@ export interface ILoginAttemptService {
   recordFailedAttempt(userId: string): Promise<void>;
   hasExceededAttemptLimit(userId: string): Promise<boolean>;
   blockUserTemporarily(userId: string): Promise<void>;
-  isTemporalyBlockedYet(userId: string): Promise<boolean>;
+  isTemporarilyBlockedYet(userId: string): Promise<boolean>;
 }

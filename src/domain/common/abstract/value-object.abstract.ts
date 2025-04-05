@@ -1,5 +1,5 @@
 import { ValidationException } from '../errors/validation.exception';
-import { Failure } from '../interfaces/utils/custom-validator.interface';
+import { Failure } from '../interfaces/services/custom-validator.interface';
 import { IValueObject } from '../interfaces/concepts/value-object.interface';
 
 /**
@@ -39,7 +39,11 @@ export abstract class ValueObject<T> implements IValueObject<T> {
    * @param other - The Value Object to compare.
    */
   public equals(other: IValueObject<T>): boolean {
-    return other instanceof ValueObject && this._value === other.value;
+    return (
+      other instanceof ValueObject &&
+      this.constructor === other.constructor &&
+      this._value === other.value
+    );
   }
 
   /**

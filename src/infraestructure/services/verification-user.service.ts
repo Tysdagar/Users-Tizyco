@@ -10,7 +10,9 @@ export class VerificationUserService implements IVerificationUserService {
 
   constructor(private readonly rd: RedisClient) {}
 
-  public async saveVerificationCodeData(data: VerificationUserData): Promise<void> {
+  public async saveVerificationCodeData(
+    data: VerificationUserData,
+  ): Promise<void> {
     const verificationDataKey = `${this.VERIFICATION_KEY}:${data.userId}`;
 
     const verificationDataValue = JSON.stringify({

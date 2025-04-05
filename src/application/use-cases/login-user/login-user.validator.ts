@@ -22,7 +22,7 @@ export class LoginUserValidator extends CustomValidator<LoginUserRequest> {
     );
 
     if (!user) {
-      this.registerFailure('Usuario Existente', 'Este usuario no existe.');
+      this.registerFailure('Usuario Inexistente', 'Este usuario no existe.');
     }
 
     this.saveValidatedData(user);

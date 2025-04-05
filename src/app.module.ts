@@ -10,6 +10,7 @@ import { EventsModule } from './infraestructure/configuration/modules/events.mod
 import { EndpointDiscoveryService } from './infraestructure/configuration/providers/endpoints.provider';
 import { UseCasesModule } from './infraestructure/configuration/modules/use-cases.module';
 import { ClientsModule } from './infraestructure/configuration/modules/clients.module';
+import { AuthModule } from './infraestructure/configuration/modules/auth.module';
 
 /**
  * Root application module for NestJS.
@@ -20,6 +21,7 @@ import { ClientsModule } from './infraestructure/configuration/modules/clients.m
     EndpointDiscoveryService.register(),
     RepositoriesModule,
     ServicesModule,
+    AuthModule,
     ClientsModule,
     EventsModule,
     ValidationModule,

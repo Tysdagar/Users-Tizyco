@@ -33,7 +33,7 @@ export class UserService extends EntityService<User> {
   }
 
   public async register(email: string, password: string): Promise<User> {
-    return this.executeAsync(async () => {
+    return this.execute(async () => {
       const user = await User.create(this.passwordService, email, password);
       this.configureEntity(user);
       return user;
@@ -41,19 +41,19 @@ export class UserService extends EntityService<User> {
   }
 
   public async requestVerification() {
-    return this.executeAsync(async () => {
+    return this.execute(async () => {
       await this.entity.requestVerification(this.verificationUserService);
     });
   }
 
   public async verifyAccount(code: string): Promise<void> {
-    return await this.executeAsync(async () => {
+    return await this.execute(async () => {
       await this.entity.verify(this.verificationUserService, code);
     });
   }
 
   public async login(password: string): Promise<void> {
-    return this.executeAsync(async () => {
+    return this.execute(async () => {
       await this.entity.login(
         this.loginAttemptsService,
         this.passwordService,
@@ -62,8 +62,8 @@ export class UserService extends EntityService<User> {
     });
   }
 
-  public validateMultifactorCode(code: number): void {
-    return this.execute(() => {
+  public async validateMultifactorCode(code: number): Promise<void> {
+    return await this.execute(() => {
       this.entity.validateMultifactorCode(code);
     });
   }

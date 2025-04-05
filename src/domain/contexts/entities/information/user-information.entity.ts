@@ -17,10 +17,10 @@ import { INFO_EXCEPTION_FACTORY } from './exceptions/information-exception.facto
  * This is an entity that belongs to the User aggregate root.
  */
 export class UserInformation {
-  private fullName: FullName | null = null;
-  private gender: Gender | null = null;
-  private phone: Phone | null = null;
-  private location: Location | null = null;
+  private _fullName: FullName | null = null;
+  private _gender: Gender | null = null;
+  private _phone: Phone | null = null;
+  private _location: Location | null = null;
 
   /**
    * Private constructor to enforce factory method usage.
@@ -129,7 +129,7 @@ export class UserInformation {
    * @param lastName - Last name (nullable).
    */
   private setFullName(firstName: string | null, lastName: string | null): void {
-    this.fullName = new FullName(firstName, lastName);
+    this._fullName = new FullName(firstName, lastName);
   }
 
   /**
@@ -137,7 +137,7 @@ export class UserInformation {
    * @param gender - Gender string.
    */
   private setGender(gender: string): void {
-    this.gender = new Gender(gender);
+    this._gender = new Gender(gender);
   }
 
   /**
@@ -145,7 +145,7 @@ export class UserInformation {
    * @param phone - Phone number string.
    */
   private setContact(phone: string): void {
-    this.phone = new Phone(phone);
+    this._phone = new Phone(phone);
   }
 
   /**
@@ -154,6 +154,20 @@ export class UserInformation {
    * @param city - City name.
    */
   private setLocation(country: string, city: string): void {
-    this.location = new Location(country, city);
+    this._location = new Location(country, city);
+  }
+
+  get fullName() {
+    if (!this._fullName || !this._fullName.value) {
+      return null;
+    }
+
+    const { firstName = '', lastName = '' } = this._fullName.value;
+
+    if (!firstName && !lastName) {
+      return null;
+    }
+
+    return `${firstName} ${lastName}`.trim();
   }
 }

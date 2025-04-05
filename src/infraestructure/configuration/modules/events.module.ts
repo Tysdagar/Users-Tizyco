@@ -3,6 +3,7 @@ import { UserEventPublisher } from 'src/application/services/event-publisher.ser
 import { EVENT_BUS } from 'src/domain/common/interfaces/concepts/event-bus.interface';
 import { NestEventBus } from '../providers/events.provider';
 import { RequestedUserVerificationHandler } from 'src/infraestructure/features/event-handlers/requested-user-verification.handler';
+import { UserStatusChangedEventHandler } from 'src/infraestructure/features/event-handlers/user-status-changed.handler';
 
 /**
  * The `EventsModule` is responsible for managing event-based communication
@@ -16,6 +17,7 @@ import { RequestedUserVerificationHandler } from 'src/infraestructure/features/e
    */
   providers: [
     RequestedUserVerificationHandler,
+    UserStatusChangedEventHandler,
 
     UserEventPublisher,
     { provide: EVENT_BUS, useClass: NestEventBus },

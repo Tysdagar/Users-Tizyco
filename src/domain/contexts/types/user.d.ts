@@ -42,10 +42,25 @@ export interface VerificationUserData {
   expiresDate: Date;
 }
 
+export interface SessionUserData {
+  accessToken: string;
+  refreshToken?: string;
+  tokenType: string;
+  expiresIn?: number;
+}
+
+export interface ExposedUserData {
+  sub: string;
+  email: string;
+  status: string;
+  fullName: string | null;
+}
+
 export type FullNameData = {
   firstName: string | null;
   lastName: string | null;
 };
+
 export type LocationData = { country: string; city: string };
 export type PasswordData = { password: string; isSecured: boolean };
 export type AuthenticationChannelData = { method: string; contact: string };
