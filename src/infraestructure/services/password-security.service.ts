@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { compare } from 'bcrypt';
 import { hash } from 'bcrypt';
 import { ConfigClient } from '../configuration/clients/config.client';
-import { IPasswordSecurityService } from 'src/domain/contexts/interfaces/password-security.interface';
+import { IPasswordSecurityService } from 'src/domain/contexts/users/interfaces/password-security.interface';
 
 @Injectable()
 export class PasswordSecurityService implements IPasswordSecurityService {

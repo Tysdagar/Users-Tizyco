@@ -1,7 +1,7 @@
-import { IVerificationUserService } from 'src/domain/contexts/interfaces/verification-account.interface';
-import { VerificationUserData } from 'src/domain/contexts/types/user';
+import { IVerificationUserService } from 'src/domain/contexts/users/interfaces/verification-account.interface';
 import { RedisClient } from '../configuration/clients/redis.client';
 import { Injectable } from '@nestjs/common';
+import { type VerificationUserData } from 'src/domain/contexts/users/types/user';
 
 @Injectable()
 export class VerificationUserService implements IVerificationUserService {

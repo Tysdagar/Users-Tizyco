@@ -6,8 +6,8 @@ import {
   VALIDATION_SERVICE,
   IValidationService,
 } from 'src/domain/common/interfaces/services/validation-service.interface';
-import { UserService } from 'src/domain/contexts/services/user.service';
 import { VerifyUserRequest } from './verify-user.request';
+import { UserService } from 'src/domain/contexts/users/services/user.service';
 
 @Injectable()
 export class VerifyUserUseCase extends UserUseCase<

@@ -1,11 +1,11 @@
 import { CustomValidator } from 'src/application/abstract/custom-validator.abstract';
 import { RequestValidator } from 'src/application/decorators/request-validator.decorator';
-import {
-  IUserRepository,
-  USER_REPOSITORY,
-} from 'src/domain/contexts/repositories/user.repository';
 import { Inject, Injectable } from '@nestjs/common';
 import { RegisterUserRequest } from './register-user.request';
+import {
+  USER_REPOSITORY,
+  IUserRepository,
+} from 'src/domain/contexts/users/repositories/user.repository';
 
 @Injectable()
 @RequestValidator(RegisterUserRequest)

@@ -1,5 +1,4 @@
-import { User } from 'src/domain/contexts/aggregate/user.aggregate';
-import { IUserRepository } from 'src/domain/contexts/repositories/user.repository';
+import { User } from 'src/domain/contexts/users/aggregate/user.aggregate';
 import { PrismaClient } from '../configuration/clients/prisma.client';
 import { GlobalVariablesClient } from '../configuration/clients/global-variables.client';
 import { Injectable } from '@nestjs/common';
@@ -10,6 +9,7 @@ import {
   MultifactorMethods,
   MultifactorStatus,
 } from '@prisma/client';
+import { IUserRepository } from 'src/domain/contexts/users/repositories/user.repository';
 
 @Injectable()
 export class PrismaUserRepository implements IUserRepository {

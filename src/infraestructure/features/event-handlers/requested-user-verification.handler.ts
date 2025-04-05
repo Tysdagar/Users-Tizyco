@@ -1,5 +1,5 @@
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { InitalizedUserVerificationEvent } from 'src/domain/contexts/aggregate/events/requested-verification.event';
+import { InitalizedUserVerificationEvent } from 'src/domain/contexts/users/aggregate/events/requested-verification.event';
 
 @EventsHandler(InitalizedUserVerificationEvent)
 export class RequestedUserVerificationHandler

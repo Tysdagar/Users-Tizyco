@@ -1,7 +1,7 @@
 import { IUseCase } from 'src/domain/common/interfaces/concepts/use-case';
 import { IValidationService } from 'src/domain/common/interfaces/services/validation-service.interface';
-import { User } from 'src/domain/contexts/aggregate/user.aggregate';
-import { UserService } from 'src/domain/contexts/services/user.service';
+import { User } from 'src/domain/contexts/users/aggregate/user.aggregate';
+import { UserService } from 'src/domain/contexts/users/services/user.service';
 
 export abstract class UserUseCase<TRequest, TResult>
   implements IUseCase<TRequest, TResult>

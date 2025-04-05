@@ -1,10 +1,10 @@
 import { Inject } from '@nestjs/common';
 import { EventsHandler, IEventHandler } from '@nestjs/cqrs';
-import { UserStatusChangedEvent } from 'src/domain/contexts/aggregate/events/user-status-changed.event';
+import { UserStatusChangedEvent } from 'src/domain/contexts/users/aggregate/events/user-status-changed.event';
 import {
-  IUserRepository,
   USER_REPOSITORY,
-} from 'src/domain/contexts/repositories/user.repository';
+  IUserRepository,
+} from 'src/domain/contexts/users/repositories/user.repository';
 
 @EventsHandler(UserStatusChangedEvent)
 export class UserStatusChangedEventHandler

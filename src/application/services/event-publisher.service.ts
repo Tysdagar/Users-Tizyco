@@ -8,7 +8,6 @@ import { IEvent } from 'src/domain/common/interfaces/concepts/event.interface';
 import { RequestedUserVerificationEvent } from '../events/requested-user-verification.event';
 import { VerifiedUserEvent } from '../events/verified-user.event';
 import { LoggedUserEvent } from '../events/logged_user.event';
-import { SessionUserData } from 'src/domain/contexts/types/user';
 
 @Injectable()
 export class UserEventPublisher {
@@ -29,8 +28,8 @@ export class UserEventPublisher {
     this.publish(new VerifiedUserEvent(userId));
   }
 
-  public logged(userSessionData: SessionUserData) {
-    this.publish(new LoggedUserEvent(userSessionData));
+  public logged(userId: string) {
+    this.publish(new LoggedUserEvent(userId));
   }
 
   private publish(event: IEvent): void {

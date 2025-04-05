@@ -1,6 +1,6 @@
-import { EntitiesTriggersExceptions } from 'src/domain/contexts/enums/entities-exceptions.enum';
 import { DomainException } from './configuration/domain.exception';
 import { getKeyFromValue } from '../utils/utils';
+import { EntitiesTriggersExceptions } from 'src/domain/contexts/users/enums/entities-exceptions.enum';
 
 export class DomainEntityException<
   TEntityExceptionMessages extends object,

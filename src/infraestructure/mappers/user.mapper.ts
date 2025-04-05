@@ -1,9 +1,9 @@
 import { User as UserEntity } from '@prisma/client';
-import { User } from 'src/domain/contexts/aggregate/user.aggregate';
-import { Authentication } from 'src/domain/contexts/entities/authentication/user-authentication.entity';
-import { UserInformation } from 'src/domain/contexts/entities/information/user-information.entity';
-import { Multifactor } from 'src/domain/contexts/entities/multifactor/user-multifactor.entity';
 import { UserPrismaDTO } from './user.dto';
+import { User } from 'src/domain/contexts/users/aggregate/user.aggregate';
+import { Authentication } from 'src/domain/contexts/users/entities/authentication/user-authentication.entity';
+import { UserInformation } from 'src/domain/contexts/users/entities/information/user-information.entity';
+import { Multifactor } from 'src/domain/contexts/users/entities/multifactor/user-multifactor.entity';
 
 export class UserMapper {
   public static buildSecureAuthData(userDTO: UserPrismaDTO): User {

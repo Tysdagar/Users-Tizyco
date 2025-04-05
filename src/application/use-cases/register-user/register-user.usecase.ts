@@ -4,14 +4,14 @@ import {
   IValidationService,
   VALIDATION_SERVICE,
 } from 'src/domain/common/interfaces/services/validation-service.interface';
-import {
-  IUserRepository,
-  USER_REPOSITORY,
-} from 'src/domain/contexts/repositories/user.repository';
-import { UserService } from 'src/domain/contexts/services/user.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { UserEventPublisher } from 'src/application/services/event-publisher.service';
 import { UserUseCase } from 'src/application/abstract/user-usecase.abstract';
+import {
+  USER_REPOSITORY,
+  IUserRepository,
+} from 'src/domain/contexts/users/repositories/user.repository';
+import { UserService } from 'src/domain/contexts/users/services/user.service';
 
 @Injectable()
 export class RegisterUserUseCase extends UserUseCase<

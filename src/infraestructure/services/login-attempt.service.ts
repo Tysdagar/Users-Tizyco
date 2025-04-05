@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ILoginAttemptService } from 'src/domain/contexts/interfaces/login-attempts.interface';
+import { UserStatus } from 'src/domain/contexts/users/aggregate/configuration/status.configuration';
+import { ILoginAttemptService } from 'src/domain/contexts/users/interfaces/login-attempts.interface';
 import { RedisClient } from '../configuration/clients/redis.client';
-import { UserStatus } from 'src/domain/contexts/aggregate/configuration/status.configuration';
 
 @Injectable()
 export class LoginAttemptService implements ILoginAttemptService {
