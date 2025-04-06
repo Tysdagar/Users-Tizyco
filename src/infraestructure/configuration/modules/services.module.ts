@@ -17,12 +17,14 @@ import { LoginAttemptService } from 'src/infraestructure/services/login-attempt.
 import { PasswordSecurityService } from 'src/infraestructure/services/password-security.service';
 import { VerificationUserService } from 'src/infraestructure/services/verification-user.service';
 import { EventsModule } from './events.module';
+import { SessionService } from 'src/domain/contexts/sessions/services/session.service';
 
 @Global()
 @Module({
   imports: [EventsModule, AuthModule],
   providers: [
     UserService,
+    SessionService,
     DataTransformationService,
 
     { provide: EmailService, useClass: EmailClient },
@@ -35,6 +37,7 @@ import { EventsModule } from './events.module';
   ],
   exports: [
     UserService,
+    SessionService,
     DataTransformationService,
 
     EmailService,

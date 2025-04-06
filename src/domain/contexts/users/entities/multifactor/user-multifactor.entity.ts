@@ -4,7 +4,7 @@ import { AuthenticationChannel } from './value-objects/authentication-channel.vo
 import { Code } from './value-objects/code.vo';
 import { MultifactorStatus } from './value-objects/mfa-status.vo';
 import { MULTIFACTOR_EXCEPTION_FACTORY } from './exceptions/multifactor-exception.factory';
-import { type MultifactorMethodParams } from '../../../../../infraestructure/user';
+import { type MultifactorMethodParams } from '../../types/user';
 
 /**
  * Represents a Multi-Factor Authentication (MFA) method entity within the User aggregate.

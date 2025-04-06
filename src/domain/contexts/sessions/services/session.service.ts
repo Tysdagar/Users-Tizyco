@@ -5,12 +5,13 @@ import {
   ITokenManagerService,
   TOKEN_MANAGER_SERVICE,
 } from '../interfaces/token-manager.interface';
-import { Inject } from '@nestjs/common';
+import { Inject, Injectable, Scope } from '@nestjs/common';
 import {
   EVENT_BUS,
   IEventBus,
 } from 'src/domain/common/interfaces/concepts/event-bus.interface';
 
+@Injectable({ scope: Scope.REQUEST })
 export class SessionService extends EntityService<Session> {
   constructor(
     @Inject(TOKEN_MANAGER_SERVICE)
@@ -23,7 +24,9 @@ export class SessionService extends EntityService<Session> {
 
   public async create(userData: ExposedUserData) {
     return await this.execute(() => {
-      return Session.create(this.tokenManagerService, userData);
+      const session = Session.create(this.tokenManagerService, userData);
+      this.configureEntity(session);
+      return session;
     });
   }
 }

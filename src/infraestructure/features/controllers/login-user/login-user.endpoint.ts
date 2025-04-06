@@ -5,14 +5,14 @@ import { ApiTags } from '@nestjs/swagger';
 import { LoginUserRequest } from 'src/application/use-cases/login-user/login-user.request';
 import { LoginUserUseCase } from 'src/application/use-cases/login-user/login-user.usecase';
 import { LoginUserBody } from './login-user.body';
-import { SessionUserData } from 'src/domain/contexts/types/user';
 import { Response as XRes } from 'express';
+import { type AccessTokenData } from 'src/domain/contexts/sessions/types/session';
 
 @ApiTags('Usuarios')
 @Controller('user')
 export class LoginUserEndpoint extends EndpointResolver<
   LoginUserBody,
-  SessionUserData
+  AccessTokenData
 > {
   constructor(private readonly loginUseCase: LoginUserUseCase) {
     super();
@@ -22,20 +22,30 @@ export class LoginUserEndpoint extends EndpointResolver<
   public async execute(
     @Body() body: LoginUserBody,
     @Res({ passthrough: true }) res: XRes,
-  ): Promise<Response<SessionUserData>> {
+  ): Promise<Response<AccessTokenData>> {
     const { email, password } = body;
 
     const request = new LoginUserRequest(email, password);
 
     const response = await this.loginUseCase.execute(request);
 
-    res.cookie('__Host-refreshToken', response.data?.refreshToken, {
+    this.setRefreshTokenCookie(res, response.data!);
+
+    return this.formatResponse(response);
+  }
+
+  private setRefreshTokenCookie(res: XRes, response: AccessTokenData): void {
+    res.cookie('__Host-refreshToken', response.refreshToken, {
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: response.data?.expiresIn,
+      maxAge: response.expiresIn,
     });
+  }
 
+  private formatResponse(
+    response: Response<AccessTokenData>,
+  ): Response<AccessTokenData> {
     delete response.data?.refreshToken;
     delete response.data?.expiresIn;
 

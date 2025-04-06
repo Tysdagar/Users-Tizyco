@@ -5,6 +5,7 @@ import { GlobalExceptionFilter } from './infraestructure/configuration/clients/g
 import 'reflect-metadata';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { RequestContextMiddleware } from './infraestructure/configuration/middlewares/request-context.middleware';
 
 /**
  * Bootstraps the NestJS application.
@@ -22,6 +23,8 @@ async function bootstrap() {
   app.setBaseViewsDir(
     join(__dirname, '..', 'src', 'infraestructure', 'public'),
   );
+
+  app.use(new RequestContextMiddleware().use.bind(this));
 
   app.setViewEngine('ejs');
 

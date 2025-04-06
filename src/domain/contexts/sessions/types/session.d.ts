@@ -9,4 +9,11 @@ export interface AccessTokenData {
   accessToken: string;
   tokenType: string;
   refreshToken?: string;
+  expiresIn?: number;
+}
+
+export interface DeviceSessionData {
+  ip: string;
+  userAgent: string;
+  device: string;
 }
