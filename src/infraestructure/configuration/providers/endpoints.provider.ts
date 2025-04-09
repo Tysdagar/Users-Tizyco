@@ -1,5 +1,5 @@
 import { Injectable, DynamicModule, Type } from '@nestjs/common';
-import { EndpointResolver } from 'src/application/abstract/endpoint-resolver.abstract';
+import { RequestResolver } from 'src/application/abstract/request-resolver.abstract';
 import * as path from 'path';
 import * as glob from 'glob';
 
@@ -56,10 +56,10 @@ export class EndpointDiscoveryService {
 
   private static isEndpointResolver(
     target: unknown,
-  ): target is Type<EndpointResolver<unknown, unknown>> {
+  ): target is Type<RequestResolver<unknown, unknown>> {
     return (
       typeof target === 'function' &&
-      target.prototype instanceof EndpointResolver
+      target.prototype instanceof RequestResolver
     );
   }
 }

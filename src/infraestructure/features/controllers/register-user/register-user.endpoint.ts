@@ -1,4 +1,4 @@
-import { EndpointResolver } from 'src/application/abstract/endpoint-resolver.abstract';
+import { RequestResolver } from 'src/application/abstract/request-resolver.abstract';
 import { RegisterUserBody } from './register-user.body';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import { Body, Controller, Post } from '@nestjs/common';
@@ -8,7 +8,7 @@ import { RegisterUserRequest } from 'src/application/use-cases/register-user/reg
 
 @ApiTags('Usuarios')
 @Controller('user')
-export class RegisterUserEndpoint extends EndpointResolver<
+export class RegisterUserEndpoint extends RequestResolver<
   RegisterUserBody,
   string
 > {

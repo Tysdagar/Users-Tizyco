@@ -1,6 +1,6 @@
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 
-export abstract class EndpointResolver<TRequest = any, TResponse = any> {
+export abstract class RequestResolver<TRequest = any, TResponse = any> {
   abstract execute(
     request: TRequest,
     ...args: any[]

@@ -1,4 +1,4 @@
-import { EndpointResolver } from 'src/application/abstract/endpoint-resolver.abstract';
+import { RequestResolver } from 'src/application/abstract/request-resolver.abstract';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import { Body, Controller, Post, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -10,7 +10,7 @@ import { type AccessTokenData } from 'src/domain/contexts/sessions/types/session
 
 @ApiTags('Usuarios')
 @Controller('user')
-export class LoginUserEndpoint extends EndpointResolver<
+export class LoginUserEndpoint extends RequestResolver<
   LoginUserBody,
   AccessTokenData
 > {

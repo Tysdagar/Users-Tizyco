@@ -36,16 +36,14 @@ export class UserSessionsService extends EntityService<UserSessions> {
   }
 
   private async initialize(userId: string) {
-    return await this.execute(async () => {
-      const sessions = await this.userSessionsManagerService.getAll(userId);
-      const userSessions = UserSessions.build(userId, sessions);
-      this.configureEntity(userSessions);
-    });
+    const sessions = await this.userSessionsManagerService.getAll(userId);
+    const userSessions = UserSessions.build(userId, sessions);
+    this.configureEntity(userSessions);
   }
 
   public async login(userData: ExposedUserData): Promise<AccessTokenData> {
+    await this.initialize(userData.userId);
     return await this.execute(async () => {
-      await this.initialize(userData.userId);
       return await this.entity.startSession(
         this.tokenManagerService,
         this.userSessionsManagerService,

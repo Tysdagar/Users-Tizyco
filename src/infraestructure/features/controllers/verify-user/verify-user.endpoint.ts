@@ -1,4 +1,4 @@
-import { EndpointResolver } from 'src/application/abstract/endpoint-resolver.abstract';
+import { RequestResolver } from 'src/application/abstract/request-resolver.abstract';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -8,7 +8,7 @@ import { VerifyUserRequest } from 'src/application/use-cases/verify-user/verify-
 
 @ApiTags('Usuarios')
 @Controller('user')
-export class VerifyUserEndpoint extends EndpointResolver<
+export class VerifyUserEndpoint extends RequestResolver<
   VerifyUserBody,
   string
 > {
