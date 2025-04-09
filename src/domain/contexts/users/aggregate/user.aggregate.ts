@@ -54,7 +54,7 @@ export class User extends AggregateRoot {
     this._multifactorMethods = _multifactorMethods;
   }
 
-  // Static Factory Methods
+  //#region Static Factory Methods
 
   /**
    * Creates a new user with the specified email and password.
@@ -97,7 +97,9 @@ export class User extends AggregateRoot {
     );
   }
 
-  // Multifactor Operations
+  //#endregion
+
+  //#region Multifactor Operations
 
   /**
    * Adds a new multifactor authentication method for the user.
@@ -176,7 +178,9 @@ export class User extends AggregateRoot {
     throw error;
   }
 
-  // Authentication Operations
+  //#endregion
+
+  //#region Update Authentication Operations
 
   /**
    * Updates the user's email or password.
@@ -204,7 +208,9 @@ export class User extends AggregateRoot {
     this._information.update(information);
   }
 
-  // Status Management
+  //#endregion
+
+  //#region Status Management
 
   /**
    * Activates the user's account.
@@ -257,7 +263,9 @@ export class User extends AggregateRoot {
     return this._status.value === (status as string);
   }
 
-  // Verification User Operations
+  //#endregion
+
+  //#region Verification User Operations
 
   /**
    * Requests user verification by generating and saving a verification code.
@@ -351,7 +359,9 @@ export class User extends AggregateRoot {
     }
   }
 
-  // Login Operations
+  //#endregion
+
+  //#region Authentication Operations
 
   /**
    * Attempts to log in the user, validating credentials and managing login attempts.
@@ -361,7 +371,7 @@ export class User extends AggregateRoot {
    * @param password - Password provided by the user.
    * @throws {UserException} If login fails for any reason.
    */
-  public async login(
+  public async authenticate(
     loginAttemptService: ILoginAttemptService,
     passwordService: IPasswordSecurityService,
     password: string,
@@ -469,7 +479,9 @@ export class User extends AggregateRoot {
     }
   }
 
-  // Events
+  //#endregion
+
+  //#region Events
 
   /**
    * Triggers an event when multifactor authentication is initialized.
@@ -494,7 +506,9 @@ export class User extends AggregateRoot {
     this.addEvent(new UserStatusChangedEvent(this.id, this.status));
   }
 
-  // Getters
+  //#endregion
+
+  //#region Getters
 
   /**
    * Gets the user's email address.

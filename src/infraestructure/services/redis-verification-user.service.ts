@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { type VerificationUserData } from 'src/domain/contexts/users/types/user';
 
 @Injectable()
-export class VerificationUserService implements IVerificationUserService {
+export class RedisVerificationUserService implements IVerificationUserService {
   private readonly VERIFICATION_KEY = 'verification';
   private readonly MAX_TTL = 3600;
 

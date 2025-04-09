@@ -2,7 +2,7 @@ import { createNamespace, getNamespace, Namespace } from 'cls-hooked';
 
 const NAMESPACE_NAME = 'request-context';
 
-export class RequestContextClient {
+export class RequestContextService {
   private static getNamespace(): Namespace {
     let namespace = getNamespace(NAMESPACE_NAME);
     if (!namespace) {

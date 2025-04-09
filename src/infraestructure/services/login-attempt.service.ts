@@ -4,7 +4,7 @@ import { ILoginAttemptService } from 'src/domain/contexts/users/interfaces/login
 import { RedisClient } from '../configuration/clients/redis.client';
 
 @Injectable()
-export class LoginAttemptService implements ILoginAttemptService {
+export class RedisLoginAttemptService implements ILoginAttemptService {
   private static readonly BLOCK_ATTEMPTS_KEY = 'block-attempts';
   private static readonly BLOCK_ATTEMPTS_VALUE = UserStatus.BLOCKED;
   private static readonly LOGIN_ATTEMPTS_KEY = 'login-attempts';
@@ -33,7 +33,7 @@ export class LoginAttemptService implements ILoginAttemptService {
       attemptsKey,
       attemptsDataValue,
       'EX',
-      LoginAttemptService.MAX_TTL,
+      RedisLoginAttemptService.MAX_TTL,
     );
   }
 
@@ -42,7 +42,7 @@ export class LoginAttemptService implements ILoginAttemptService {
     const attempts = await this.getKey(attemptsKey);
     const attemptsDeserialized = this.parseAttempts(attempts);
 
-    return attemptsDeserialized === LoginAttemptService.MAX_ATTEMPTS;
+    return attemptsDeserialized === RedisLoginAttemptService.MAX_ATTEMPTS;
   }
 
   public async blockUserTemporarily(userId: string): Promise<void> {
@@ -53,9 +53,9 @@ export class LoginAttemptService implements ILoginAttemptService {
 
     await this.rd.execute.set(
       blockKey,
-      LoginAttemptService.BLOCK_ATTEMPTS_VALUE,
+      RedisLoginAttemptService.BLOCK_ATTEMPTS_VALUE,
       'EX',
-      LoginAttemptService.MAX_BLOCK_TIME_TTL,
+      RedisLoginAttemptService.MAX_BLOCK_TIME_TTL,
     );
   }
 
@@ -66,11 +66,11 @@ export class LoginAttemptService implements ILoginAttemptService {
   }
 
   private getUserBlockedAttemptsKey(userId: string) {
-    return `${LoginAttemptService.BLOCK_ATTEMPTS_KEY}:${userId}`;
+    return `${RedisLoginAttemptService.BLOCK_ATTEMPTS_KEY}:${userId}`;
   }
 
   private getUserAttemptsKey(userId: string) {
-    return `${LoginAttemptService.LOGIN_ATTEMPTS_KEY}:${userId}`;
+    return `${RedisLoginAttemptService.LOGIN_ATTEMPTS_KEY}:${userId}`;
   }
 
   private async getKey(key: string) {

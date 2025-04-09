@@ -5,7 +5,7 @@ import { ITokenManagerService } from 'src/domain/contexts/sessions/interfaces/to
 import { ExposedUserData } from 'src/domain/contexts/users/types/user';
 
 @Injectable()
-export class TokenManagerService implements ITokenManagerService {
+export class JWTTokenManagerService implements ITokenManagerService {
   constructor(
     private readonly jwt: JwtService,
     private readonly configClient: ConfigClient,

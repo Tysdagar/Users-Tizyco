@@ -5,7 +5,7 @@ import { ConfigClient } from '../configuration/clients/config.client';
 import { IPasswordSecurityService } from 'src/domain/contexts/users/interfaces/password-security.interface';
 
 @Injectable()
-export class PasswordSecurityService implements IPasswordSecurityService {
+export class BcryptPasswordSecurityService implements IPasswordSecurityService {
   /**
    * Secret key used for hashing passwords.
    * Retrieved from the configuration client.

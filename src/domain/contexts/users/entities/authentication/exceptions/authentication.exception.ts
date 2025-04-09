@@ -1,6 +1,6 @@
 import { DomainEntityException } from 'src/domain/common/errors/entity.exception';
 import { AuthenticationExceptionMessages } from './authentication-exceptions.enum';
-import { EntitiesTriggersExceptions } from '../../../enums/entities-exceptions.enum';
+import { EntitiesTriggersExceptions } from '../../../../../common/enums/entities-exceptions.enum';
 
 export class AuthenticationException extends DomainEntityException<
   typeof AuthenticationExceptionMessages

@@ -52,9 +52,9 @@ export class UserService extends EntityService<User> {
     });
   }
 
-  public async login(password: string): Promise<void> {
+  public async authenticate(password: string): Promise<void> {
     return this.execute(async () => {
-      await this.entity.login(
+      await this.entity.authenticate(
         this.loginAttemptsService,
         this.passwordService,
         password,

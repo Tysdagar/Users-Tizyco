@@ -1,7 +1,7 @@
 import { StateSyncService } from 'src/infraestructure/helpers/state-sync.service';
 import { RepositoriesModule } from './repositories.module';
 import { Module } from '@nestjs/common';
-import { PrismaUserStatusDAO } from 'src/infraestructure/repositories/user-status.DAO';
+import { PrismaUserStatusDAO } from 'src/infraestructure/repositories/prisma-user-status.DAO';
 import { SupportedUserStatus } from 'src/domain/contexts/users/aggregate/configuration/status.configuration';
 
 /**

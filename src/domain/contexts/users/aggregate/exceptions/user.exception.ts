@@ -1,6 +1,6 @@
 import { DomainEntityException } from 'src/domain/common/errors/entity.exception';
 import { UserExceptionMessages } from './user-exceptions.enum';
-import { EntitiesTriggersExceptions } from '../../enums/entities-exceptions.enum';
+import { EntitiesTriggersExceptions } from '../../../../common/enums/entities-exceptions.enum';
 
 export class UserException extends DomainEntityException<
   typeof UserExceptionMessages

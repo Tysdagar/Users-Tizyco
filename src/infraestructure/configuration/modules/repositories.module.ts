@@ -1,9 +1,9 @@
 import { Global, Module } from '@nestjs/common';
-import { SESSION_REPOSITORY } from 'src/domain/contexts/sessions/repositories/session.repository';
+import { USER_SESSIONS_MANAGER_SERVICE } from 'src/domain/contexts/sessions/interfaces/session-manager.interface';
 import { USER_REPOSITORY } from 'src/domain/contexts/users/repositories/user.repository';
-import { SessionRepository } from 'src/infraestructure/repositories/session.repository';
-import { PrismaUserStatusDAO } from 'src/infraestructure/repositories/user-status.DAO';
-import { PrismaUserRepository } from 'src/infraestructure/repositories/user.repository';
+import { PrismaUserStatusDAO } from 'src/infraestructure/repositories/prisma-user-status.DAO';
+import { PrismaUserRepository } from 'src/infraestructure/repositories/prisma-user.repository';
+import { RedisUserSessionsManagerService } from 'src/infraestructure/services/redis-user-sessions-manager.service';
 
 /**
  * The `RepositoriesModule` is a global module responsible for providing
@@ -20,8 +20,8 @@ import { PrismaUserRepository } from 'src/infraestructure/repositories/user.repo
       useClass: PrismaUserRepository,
     },
     {
-      provide: SESSION_REPOSITORY,
-      useClass: SessionRepository,
+      provide: USER_SESSIONS_MANAGER_SERVICE,
+      useClass: RedisUserSessionsManagerService,
     },
     PrismaUserStatusDAO,
   ],
@@ -29,6 +29,10 @@ import { PrismaUserRepository } from 'src/infraestructure/repositories/user.repo
   /**
    * Exported providers and tokens, making them available globally.
    */
-  exports: [USER_REPOSITORY, SESSION_REPOSITORY, PrismaUserStatusDAO],
+  exports: [
+    USER_REPOSITORY,
+    USER_SESSIONS_MANAGER_SERVICE,
+    PrismaUserStatusDAO,
+  ],
 })
 export class RepositoriesModule {}

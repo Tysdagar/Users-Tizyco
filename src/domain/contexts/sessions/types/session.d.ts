@@ -3,6 +3,7 @@ export interface SessionData {
   refreshToken: string;
   expiresIn: number;
   createdAt: Date;
+  fingerPrint: string;
 }
 
 export interface AccessTokenData {
@@ -12,7 +13,7 @@ export interface AccessTokenData {
   expiresIn?: number;
 }
 
-export interface DeviceSessionData {
+export interface FingerPrint {
   ip: string;
   userAgent: string;
   device: string;
