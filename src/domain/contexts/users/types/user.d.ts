@@ -42,7 +42,7 @@ export interface VerificationUserData {
   expiresDate: Date;
 }
 
-export interface ExposedUserData {
+export interface UserAuthenticatedData {
   userId: string;
   email: string;
   status: string;

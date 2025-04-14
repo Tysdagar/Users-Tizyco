@@ -1,3 +1,5 @@
+import { ConfiguredServicesCollection } from './validation-service.interface';
+
 /**
  * Interface representing a validation failure.
  */
@@ -39,19 +41,9 @@ export interface ICustomValidator<Request> {
    */
   cleanFailures(): void;
 
-  /**
-   * Sets the validated data for further processing.
-   *
-   * @typeParam Data - The type of the validated data.
-   * @param data - The validated data to store.
-   */
-  saveValidatedData<Data>(data: Data): void;
+  saveConfiguredServices<TServices extends ConfiguredServicesCollection>(
+    services: TServices,
+  ): void;
 
-  /**
-   * Retrieves the previously validated data.
-   *
-   * @typeParam Data - The type of the validated data.
-   * @returns The validated data.
-   */
-  getValidatedData<Data>(): Data;
+  getConfiguredServices(): ConfiguredServicesCollection;
 }

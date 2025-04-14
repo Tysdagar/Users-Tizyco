@@ -2,6 +2,7 @@ import {
   Failure,
   ICustomValidator,
 } from 'src/domain/common/interfaces/services/custom-validator.interface';
+import { ConfiguredServicesCollection } from 'src/domain/common/interfaces/services/validation-service.interface';
 
 /**
  * Abstract base class for custom validators.
@@ -23,7 +24,7 @@ export abstract class CustomValidator<Request>
   /**
    * Stores the validated data.
    */
-  protected _validatedData: any;
+  protected _domainServices: ConfiguredServicesCollection;
 
   constructor() {}
 
@@ -91,23 +92,15 @@ export abstract class CustomValidator<Request>
     this._failures = [];
   }
 
-  /**
-   * Sets the validated data after successful validation.
-   *
-   * @template Data - The type of the validated data.
-   * @param data - The data to store as validated.
-   */
-  public saveValidatedData<Data>(data: Data): void {
-    this._validatedData = data;
+  public saveConfiguredServices<TServices extends ConfiguredServicesCollection>(
+    services: TServices,
+  ): void {
+    this._domainServices = services;
   }
 
-  /**
-   * Retrieves the validated data.
-   *
-   * @template Data - The expected type of the validated data.
-   * @returns The validated data cast to the specified type.
-   */
-  public getValidatedData<Data>(): Data {
-    return this._validatedData as Data;
+  public getConfiguredServices<
+    TServices extends ConfiguredServicesCollection,
+  >(): TServices {
+    return this._domainServices as TServices;
   }
 }

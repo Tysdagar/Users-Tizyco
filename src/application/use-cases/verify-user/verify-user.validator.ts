@@ -6,12 +6,15 @@ import {
   USER_REPOSITORY,
   IUserRepository,
 } from 'src/domain/contexts/users/repositories/user.repository';
+import { UserService } from 'src/domain/contexts/users/services/user.service';
+import { UserRequiredDomainServices } from 'src/application/abstract/types/required-services-use-cases';
 
 @Injectable()
 @RequestValidator(VerifyUserRequest)
 export class VerifyUserValidator extends CustomValidator<VerifyUserRequest> {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
+    private readonly userService: UserService,
   ) {
     super();
   }
@@ -23,7 +26,9 @@ export class VerifyUserValidator extends CustomValidator<VerifyUserRequest> {
       return this.failValidation('Usuario', 'Este usuario no existe.');
     }
 
-    this.saveValidatedData(user);
+    this.saveConfiguredServices<UserRequiredDomainServices>({
+      userService: this.userService.initialize(user),
+    });
 
     return this.checkValidation();
   }

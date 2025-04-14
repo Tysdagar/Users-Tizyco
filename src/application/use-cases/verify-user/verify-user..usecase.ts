@@ -1,4 +1,4 @@
-import { UserUseCase } from 'src/application/abstract/user-usecase.abstract';
+import { UseCase } from 'src/application/abstract/use-case.abstract';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import { Inject, Injectable } from '@nestjs/common';
 import { UserEventPublisher } from 'src/application/services/event-publisher.service';
@@ -7,28 +7,28 @@ import {
   IValidationService,
 } from 'src/domain/common/interfaces/services/validation-service.interface';
 import { VerifyUserRequest } from './verify-user.request';
-import { UserService } from 'src/domain/contexts/users/services/user.service';
+import { type UserRequiredDomainServices } from 'src/application/abstract/types/required-services-use-cases';
 
 @Injectable()
-export class VerifyUserUseCase extends UserUseCase<
+export class VerifyUserUseCase extends UseCase<
   VerifyUserRequest,
-  Response<string>
+  Response<string>,
+  UserRequiredDomainServices
 > {
   constructor(
     private readonly userEventPublisher: UserEventPublisher,
     @Inject(VALIDATION_SERVICE)
     validationService: IValidationService<VerifyUserRequest>,
-    userService: UserService,
   ) {
-    super(validationService, userService);
+    super(validationService);
   }
 
   protected async handle(
     request: VerifyUserRequest,
   ): Promise<Response<string>> {
-    await this.userService.verifyAccount(request.verificationCode);
+    await this.services.userService.verifyAccount(request.verificationCode);
 
-    this.userEventPublisher.verified(this.user.id);
+    this.userEventPublisher.verified(request.userId);
 
     return Response.message('El usuario ha sido verificado correctamente.');
   }

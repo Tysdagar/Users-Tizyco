@@ -9,7 +9,9 @@ export abstract class EntityService<T extends AggregateRoot> {
     this.eventBus = eventBus;
   }
 
-  public configureEntity(entity: T): void {
+  abstract initialize(entity: T): this;
+
+  protected configureEntity(entity: T) {
     if (this._entity) {
       throw new DomainException(
         `La entidad '${this.getEntityName()}' ya ha sido configurada en el servicio.`,
@@ -26,7 +28,7 @@ export abstract class EntityService<T extends AggregateRoot> {
     }
   }
 
-  public get entity() {
+  protected get entity() {
     this.ensureConfigured();
     return this._entity;
   }

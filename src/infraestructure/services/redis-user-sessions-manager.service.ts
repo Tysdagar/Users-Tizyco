@@ -3,7 +3,10 @@ import { IUserSessionsManagerService } from 'src/domain/contexts/sessions/interf
 import { type SessionData } from 'src/domain/contexts/sessions/types/session';
 import { RedisClient } from '../configuration/clients/redis.client';
 import { DataTransformationService } from '../helpers/data-transform.service';
-import { Sessions } from 'src/domain/contexts/sessions/aggregate/user-sessions.aggregate';
+import {
+  Sessions,
+  UserSessions,
+} from 'src/domain/contexts/sessions/aggregate/user-sessions.aggregate';
 import { Session } from 'src/domain/contexts/sessions/entities/session.entity';
 
 @Injectable()
@@ -40,7 +43,7 @@ export class RedisUserSessionsManagerService
     await this.rd.execute.hdel(userSessionsKey, fingerPrintHash);
   }
 
-  public async getAll(userId: string): Promise<Sessions> {
+  public async getAll(userId: string): Promise<UserSessions> {
     const sessions = new Map() as Sessions;
 
     const savedSessions = await this.rd.execute.hgetall(
@@ -62,7 +65,7 @@ export class RedisUserSessionsManagerService
       });
     }
 
-    return sessions;
+    return UserSessions.build(userId, sessions);
   }
 
   private getUserSessionsSetKey(userId: string): string {

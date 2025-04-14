@@ -11,6 +11,7 @@ import { RegisterUserValidator } from 'src/application/use-cases/register-user/r
 import { RequestUserVerificationValidator } from 'src/application/use-cases/request-user-verification/request-user-verification.validator';
 import { VerifyUserValidator } from 'src/application/use-cases/verify-user/verify-user.validator';
 import { LoginUserValidator } from 'src/application/use-cases/login-user/login-user.validator';
+import { RepositoriesModule } from './repositories.module';
 
 /**
  * The `ValidationModule` is responsible for registering and managing
@@ -27,6 +28,7 @@ import { LoginUserValidator } from 'src/application/use-cases/login-user/login-u
      * providers, enabling the `ValidatorsProvider` to map validators.
      */
     DiscoveryModule,
+    RepositoriesModule,
   ],
   providers: [
     // Command and query validators

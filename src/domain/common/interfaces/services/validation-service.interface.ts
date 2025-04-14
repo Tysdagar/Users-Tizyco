@@ -1,8 +1,12 @@
+import { EntityService } from '../../abstract/entity-service.abstract';
+
 /**
  * Symbols used for dependency injection and service identification.
  */
 export const VALIDATION_SERVICE = Symbol('VALIDATION_SERVICE');
 export const VALIDATORS = Symbol('VALIDATORS');
+
+export type ConfiguredServicesCollection = Record<string, EntityService<any>>;
 
 /**
  * Interface for a Validation Service responsible for handling validation logic.
@@ -45,5 +49,7 @@ export interface IValidationService<Request> {
    * console.log(validatedData);
    * ```
    */
-  retrieveValidatedData<Data>(): Data;
+  retrieveConfiguredDomainServices<
+    TServices extends ConfiguredServicesCollection,
+  >(): TServices;
 }

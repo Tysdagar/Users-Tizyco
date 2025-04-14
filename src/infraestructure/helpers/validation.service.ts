@@ -4,6 +4,7 @@ import { Command, Query } from '@nestjs/cqrs';
 import { CustomValidator } from 'src/application/abstract/custom-validator.abstract';
 import { ValidationException } from 'src/domain/common/errors/validation.exception';
 import {
+  ConfiguredServicesCollection,
   IValidationService,
   VALIDATORS,
 } from 'src/domain/common/interfaces/services/validation-service.interface';
@@ -76,13 +77,9 @@ export class ValidationService<Request extends Command<any> | Query<any>>
     }
   }
 
-  /**
-   * Retrieves validated data from the executed validator.
-   *
-   * @template Data - The type of the validated data.
-   * @returns The validated data.
-   */
-  public retrieveValidatedData<Data>(): Data {
-    return this.validator.getValidatedData<Data>();
+  public retrieveConfiguredDomainServices<
+    TServices extends ConfiguredServicesCollection,
+  >(): TServices {
+    return this.validator.getConfiguredServices();
   }
 }

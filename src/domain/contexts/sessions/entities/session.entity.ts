@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { ITokenManagerService } from '../interfaces/token-manager.interface';
-import { ExposedUserData } from '../../users/types/user';
+import { UserAuthenticatedData } from '../../users/types/user';
 import { type AccessTokenData, type SessionData } from '../types/session';
 import { IFingerPrintService } from '../interfaces/device-info.interface';
 
@@ -37,7 +37,7 @@ export class Session {
   public static create(
     fingerPrintService: IFingerPrintService,
     tokenManagerService: ITokenManagerService,
-    userData: ExposedUserData,
+    userData: UserAuthenticatedData,
   ) {
     const sessionId = randomUUID();
     const refreshToken = randomUUID();

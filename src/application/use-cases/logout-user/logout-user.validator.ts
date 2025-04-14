@@ -1,22 +1,22 @@
 import { CustomValidator } from 'src/application/abstract/custom-validator.abstract';
 import { RequestValidator } from 'src/application/decorators/request-validator.decorator';
 import { Inject, Injectable } from '@nestjs/common';
-import { LoginUserRequest } from './login-user.request';
+import { LogoutUserRequest } from './logout-user.request';
 import {
   USER_REPOSITORY,
   IUserRepository,
 } from 'src/domain/contexts/users/repositories/user.repository';
 import { UserSessionsRequiredDomainServices } from 'src/application/abstract/types/required-services-use-cases';
-import {
-  USER_SESSIONS_MANAGER_SERVICE,
-  IUserSessionsManagerService,
-} from 'src/domain/contexts/sessions/interfaces/session-manager.interface';
 import { UserSessionsService } from 'src/domain/contexts/sessions/services/session.service';
 import { UserService } from 'src/domain/contexts/users/services/user.service';
+import {
+  IUserSessionsManagerService,
+  USER_SESSIONS_MANAGER_SERVICE,
+} from 'src/domain/contexts/sessions/interfaces/session-manager.interface';
 
 @Injectable()
-@RequestValidator(LoginUserRequest)
-export class LoginUserValidator extends CustomValidator<LoginUserRequest> {
+@RequestValidator(LogoutUserRequest)
+export class LogoutUserValidator extends CustomValidator<LogoutUserRequest> {
   constructor(
     @Inject(USER_REPOSITORY) private readonly userRepository: IUserRepository,
     @Inject(USER_SESSIONS_MANAGER_SERVICE)
@@ -27,10 +27,8 @@ export class LoginUserValidator extends CustomValidator<LoginUserRequest> {
     super();
   }
 
-  public async validate(request: LoginUserRequest): Promise<boolean> {
-    const user = await this.userRepository.findAuthDataWithPassword(
-      request.email,
-    );
+  public async validate(request: LogoutUserRequest): Promise<boolean> {
+    const user = await this.userRepository.findUserInfo(request.userId);
 
     if (!user) {
       return this.failValidation(

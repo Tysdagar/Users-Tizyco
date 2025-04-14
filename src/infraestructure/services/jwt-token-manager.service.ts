@@ -2,7 +2,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigClient } from '../configuration/clients/config.client';
 import { Injectable } from '@nestjs/common';
 import { ITokenManagerService } from 'src/domain/contexts/sessions/interfaces/token-manager.interface';
-import { ExposedUserData } from 'src/domain/contexts/users/types/user';
+import { UserAuthenticatedData } from 'src/domain/contexts/users/types/user';
 
 @Injectable()
 export class JWTTokenManagerService implements ITokenManagerService {
@@ -13,7 +13,7 @@ export class JWTTokenManagerService implements ITokenManagerService {
 
   public generate(
     sessionId: string,
-    payload: ExposedUserData,
+    payload: UserAuthenticatedData,
     expiresIn: number,
   ): string {
     return this.jwt.sign(payload, {

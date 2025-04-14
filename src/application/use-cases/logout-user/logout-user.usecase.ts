@@ -1,4 +1,4 @@
-import { LoginUserRequest } from './login-user.request';
+import { LogoutUserRequest } from './logout-user.request';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import {
   IValidationService,
@@ -7,36 +7,29 @@ import {
 import { Inject, Injectable } from '@nestjs/common';
 import { UserEventPublisher } from 'src/application/services/event-publisher.service';
 import { UseCase } from 'src/application/abstract/use-case.abstract';
-import { type AccessTokenData } from 'src/domain/contexts/sessions/types/session';
 import { UserSessionsRequiredDomainServices } from 'src/application/abstract/types/required-services-use-cases';
 
 @Injectable()
-export class LoginUserUseCase extends UseCase<
-  LoginUserRequest,
-  Response<AccessTokenData>,
+export class LogoutUserCase extends UseCase<
+  LogoutUserRequest,
+  Response<string>,
   UserSessionsRequiredDomainServices
 > {
   constructor(
     private readonly userEventPublisher: UserEventPublisher,
     @Inject(VALIDATION_SERVICE)
-    validationService: IValidationService<LoginUserRequest>,
+    validationService: IValidationService<LogoutUserRequest>,
   ) {
     super(validationService);
   }
 
   protected async handle(
-    request: LoginUserRequest,
-  ): Promise<Response<AccessTokenData>> {
-    const userDataAuthenticated = await this.services.userService.authenticate(
-      request.password,
-    );
+    request: LogoutUserRequest,
+  ): Promise<Response<string>> {
+    await this.services.userSessionsService.logout();
 
-    const accessToken = await this.services.userSessionsService.login(
-      userDataAuthenticated,
-    );
+    this.userEventPublisher.loggedOut(request.userId);
 
-    this.userEventPublisher.logged(userDataAuthenticated.userId);
-
-    return Response.data<AccessTokenData>(accessToken);
+    return Response.message('Se ha cerrado la sesion correctamente.');
   }
 }

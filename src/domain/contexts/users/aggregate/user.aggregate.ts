@@ -19,7 +19,7 @@ import { InitalizedUserVerificationEvent } from './events/requested-verification
 import { VerificationCodeGenerator } from './configuration/verification-code.configuration';
 import { UserStatusChangedEvent } from './events/user-status-changed.event';
 import {
-  type ExposedUserData,
+  type UserAuthenticatedData,
   type UserCreatedProperties,
   type UserInformationParams,
   type UserParams,
@@ -375,7 +375,7 @@ export class User extends AggregateRoot {
     loginAttemptService: ILoginAttemptService,
     passwordService: IPasswordSecurityService,
     password: string,
-  ): Promise<void> {
+  ): Promise<UserAuthenticatedData> {
     this.checkUserExists();
     await this.checkUserBlocked(loginAttemptService);
     await this.validateCredentials(
@@ -385,6 +385,7 @@ export class User extends AggregateRoot {
     );
     this.checkMultifactorAuthentication();
     await loginAttemptService.resetAttempts(this.id);
+    return this.userAuthenticatedData;
   }
 
   /**
@@ -539,7 +540,7 @@ export class User extends AggregateRoot {
     };
   }
 
-  get userExposedData(): ExposedUserData {
+  private get userAuthenticatedData(): UserAuthenticatedData {
     return {
       userId: this.id,
       email: this.email,

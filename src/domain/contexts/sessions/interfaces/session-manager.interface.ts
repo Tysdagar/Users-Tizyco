@@ -1,4 +1,4 @@
-import { Sessions } from '../aggregate/user-sessions.aggregate';
+import { UserSessions } from '../aggregate/user-sessions.aggregate';
 import { type SessionData } from '../types/session';
 
 export const USER_SESSIONS_MANAGER_SERVICE = Symbol(
@@ -14,5 +14,5 @@ export interface IUserSessionsManagerService {
 
   revokeSession(userId: string, fingerPrintHash: string): Promise<void>;
 
-  getAll(userId: string): Promise<Sessions>;
+  getAll(userId: string): Promise<UserSessions>;
 }

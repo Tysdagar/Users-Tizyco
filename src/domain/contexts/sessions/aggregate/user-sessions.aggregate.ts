@@ -1,6 +1,6 @@
 import { AggregateRoot } from 'src/domain/common/abstract/aggregate-root.abstract';
 import { Session } from '../entities/session.entity';
-import { type ExposedUserData } from '../../users/types/user';
+import { type UserAuthenticatedData } from '../../users/types/user';
 import { IUserSessionsManagerService } from '../interfaces/session-manager.interface';
 import { ITokenManagerService } from '../interfaces/token-manager.interface';
 import { AccessTokenData } from '../types/session';
@@ -29,7 +29,7 @@ export class UserSessions extends AggregateRoot {
     tokenManagerService: ITokenManagerService,
     sessionManagerService: IUserSessionsManagerService,
     fingerPrintService: IFingerPrintService,
-    userData: ExposedUserData,
+    userData: UserAuthenticatedData,
   ): Promise<AccessTokenData> {
     const { fingerPrintHash, existingSession } =
       this.resolveSession(fingerPrintService);

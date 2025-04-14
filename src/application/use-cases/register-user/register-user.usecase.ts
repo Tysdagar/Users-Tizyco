@@ -6,7 +6,7 @@ import {
 } from 'src/domain/common/interfaces/services/validation-service.interface';
 import { Inject, Injectable } from '@nestjs/common';
 import { UserEventPublisher } from 'src/application/services/event-publisher.service';
-import { UserUseCase } from 'src/application/abstract/user-usecase.abstract';
+import { UseCase } from 'src/application/abstract/use-case.abstract';
 import {
   USER_REPOSITORY,
   IUserRepository,
@@ -14,7 +14,7 @@ import {
 import { UserService } from 'src/domain/contexts/users/services/user.service';
 
 @Injectable()
-export class RegisterUserUseCase extends UserUseCase<
+export class RegisterUserUseCase extends UseCase<
   RegisterUserRequest,
   Response<string>
 > {
@@ -24,9 +24,9 @@ export class RegisterUserUseCase extends UserUseCase<
     private readonly userEventPublisher: UserEventPublisher,
     @Inject(VALIDATION_SERVICE)
     validationService: IValidationService<RegisterUserRequest>,
-    userService: UserService,
+    private userService: UserService,
   ) {
-    super(validationService, userService);
+    super(validationService);
   }
 
   protected async handle(

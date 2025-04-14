@@ -8,6 +8,7 @@ import { IEvent } from 'src/domain/common/interfaces/concepts/event.interface';
 import { RequestedUserVerificationEvent } from '../events/requested-user-verification.event';
 import { VerifiedUserEvent } from '../events/verified-user.event';
 import { LoggedUserEvent } from '../events/logged_user.event';
+import { LoggedOutUserEvent } from '../events/logged_out_user.event';
 
 @Injectable()
 export class UserEventPublisher {
@@ -30,6 +31,10 @@ export class UserEventPublisher {
 
   public logged(userId: string) {
     this.publish(new LoggedUserEvent(userId));
+  }
+
+  public loggedOut(userId: string) {
+    this.publish(new LoggedOutUserEvent(userId));
   }
 
   private publish(event: IEvent): void {

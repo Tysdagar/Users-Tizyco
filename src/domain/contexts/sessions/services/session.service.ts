@@ -1,5 +1,5 @@
 import { EntityService } from 'src/domain/common/abstract/entity-service.abstract';
-import { ExposedUserData } from '../../users/types/user';
+import { UserAuthenticatedData } from '../../users/types/user';
 import {
   ITokenManagerService,
   TOKEN_MANAGER_SERVICE,
@@ -24,7 +24,7 @@ import {
 export class UserSessionsService extends EntityService<UserSessions> {
   constructor(
     @Inject(FINGERPRINT_SERVICE)
-    private readonly deviceInfoService: IFingerPrintService,
+    private readonly fingerPrintService: IFingerPrintService,
     @Inject(USER_SESSIONS_MANAGER_SERVICE)
     private readonly userSessionsManagerService: IUserSessionsManagerService,
     @Inject(TOKEN_MANAGER_SERVICE)
@@ -35,20 +35,29 @@ export class UserSessionsService extends EntityService<UserSessions> {
     super(eventBus);
   }
 
-  private async initialize(userId: string) {
-    const sessions = await this.userSessionsManagerService.getAll(userId);
-    const userSessions = UserSessions.build(userId, sessions);
+  public initialize(userSessions: UserSessions): this {
     this.configureEntity(userSessions);
+    return this;
   }
 
-  public async login(userData: ExposedUserData): Promise<AccessTokenData> {
-    await this.initialize(userData.userId);
+  public async login(
+    userData: UserAuthenticatedData,
+  ): Promise<AccessTokenData> {
     return await this.execute(async () => {
       return await this.entity.startSession(
         this.tokenManagerService,
         this.userSessionsManagerService,
-        this.deviceInfoService,
+        this.fingerPrintService,
         userData,
+      );
+    });
+  }
+
+  public async logout(): Promise<void> {
+    await this.execute(async () => {
+      await this.entity.finishSession(
+        this.userSessionsManagerService,
+        this.fingerPrintService,
       );
     });
   }

@@ -17,6 +17,7 @@ import {
   IVerificationUserService,
   VERIFICATION_USER_SERVICE,
 } from '../interfaces/verification-account.interface';
+import { UserAuthenticatedData } from '../types/user';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService extends EntityService<User> {
@@ -30,6 +31,11 @@ export class UserService extends EntityService<User> {
     @Inject(EVENT_BUS) eventBus: IEventBus,
   ) {
     super(eventBus);
+  }
+
+  public initialize(entity: User): this {
+    this.configureEntity(entity);
+    return this;
   }
 
   public async register(email: string, password: string): Promise<User> {
@@ -52,9 +58,9 @@ export class UserService extends EntityService<User> {
     });
   }
 
-  public async authenticate(password: string): Promise<void> {
+  public async authenticate(password: string): Promise<UserAuthenticatedData> {
     return this.execute(async () => {
-      await this.entity.authenticate(
+      return await this.entity.authenticate(
         this.loginAttemptsService,
         this.passwordService,
         password,

@@ -1,4 +1,4 @@
-import { UserUseCase } from 'src/application/abstract/user-usecase.abstract';
+import { UseCase } from 'src/application/abstract/use-case.abstract';
 import { RequestUserVerificationRequest } from './request-user-verification.request';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import { Inject, Injectable } from '@nestjs/common';
@@ -7,26 +7,26 @@ import {
   VALIDATION_SERVICE,
   IValidationService,
 } from 'src/domain/common/interfaces/services/validation-service.interface';
-import { UserService } from 'src/domain/contexts/users/services/user.service';
+import { UserRequiredDomainServices } from 'src/application/abstract/types/required-services-use-cases';
 
 @Injectable()
-export class RequestUserVerificationUseCase extends UserUseCase<
+export class RequestUserVerificationUseCase extends UseCase<
   RequestUserVerificationRequest,
-  Response<string>
+  Response<string>,
+  UserRequiredDomainServices
 > {
   constructor(
     private readonly userEventPublisher: UserEventPublisher,
     @Inject(VALIDATION_SERVICE)
     validationService: IValidationService<RequestUserVerificationRequest>,
-    userService: UserService,
   ) {
-    super(validationService, userService);
+    super(validationService);
   }
 
   protected async handle(
     request: RequestUserVerificationRequest,
   ): Promise<Response<string>> {
-    await this.userService.requestVerification();
+    await this.services.userService.requestVerification();
 
     this.userEventPublisher.requestedVerification(request.userId);
 
