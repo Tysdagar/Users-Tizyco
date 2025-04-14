@@ -5,6 +5,7 @@ import { ValidationModule } from './validation.module';
 import { RequestUserVerificationUseCase } from 'src/application/use-cases/request-user-verification/request-user-verification.usecase';
 import { VerifyUserUseCase } from 'src/application/use-cases/verify-user/verify-user..usecase';
 import { LoginUserUseCase } from 'src/application/use-cases/login-user/login-user.usecase';
+import { LogoutUserUseCase } from 'src/application/use-cases/logout-user/logout-user.usecase';
 
 @Global()
 @Module({
@@ -14,12 +15,14 @@ import { LoginUserUseCase } from 'src/application/use-cases/login-user/login-use
     RequestUserVerificationUseCase,
     VerifyUserUseCase,
     LoginUserUseCase,
+    LogoutUserUseCase,
   ],
   exports: [
     RegisterUserUseCase,
     RequestUserVerificationUseCase,
     VerifyUserUseCase,
     LoginUserUseCase,
+    LogoutUserUseCase,
   ],
 })
 export class UseCasesModule {}

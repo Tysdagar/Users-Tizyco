@@ -10,7 +10,7 @@ import { UseCase } from 'src/application/abstract/use-case.abstract';
 import { UserSessionsRequiredDomainServices } from 'src/application/abstract/types/required-services-use-cases';
 
 @Injectable()
-export class LogoutUserCase extends UseCase<
+export class LogoutUserUseCase extends UseCase<
   LogoutUserRequest,
   Response<string>,
   UserSessionsRequiredDomainServices

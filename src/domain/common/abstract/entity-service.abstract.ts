@@ -12,11 +12,6 @@ export abstract class EntityService<T extends AggregateRoot> {
   abstract initialize(entity: T): this;
 
   protected configureEntity(entity: T) {
-    if (this._entity) {
-      throw new DomainException(
-        `La entidad '${this.getEntityName()}' ya ha sido configurada en el servicio.`,
-      );
-    }
     this._entity = entity;
   }
 

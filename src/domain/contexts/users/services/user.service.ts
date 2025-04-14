@@ -8,7 +8,7 @@ import {
   LOGIN_ATTEMPTS_SERVICE,
 } from '../interfaces/login-attempts.interface';
 import { EntityService } from 'src/domain/common/abstract/entity-service.abstract';
-import { Inject, Injectable, Scope } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   EVENT_BUS,
   IEventBus,
@@ -19,7 +19,7 @@ import {
 } from '../interfaces/verification-account.interface';
 import { UserAuthenticatedData } from '../types/user';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class UserService extends EntityService<User> {
   constructor(
     @Inject(PASSWORD_SECURITY_SERVICE)

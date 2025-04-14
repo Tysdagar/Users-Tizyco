@@ -12,6 +12,7 @@ import { RequestUserVerificationValidator } from 'src/application/use-cases/requ
 import { VerifyUserValidator } from 'src/application/use-cases/verify-user/verify-user.validator';
 import { LoginUserValidator } from 'src/application/use-cases/login-user/login-user.validator';
 import { RepositoriesModule } from './repositories.module';
+import { LogoutUserValidator } from 'src/application/use-cases/logout-user/logout-user.validator';
 
 /**
  * The `ValidationModule` is responsible for registering and managing
@@ -31,11 +32,12 @@ import { RepositoriesModule } from './repositories.module';
     RepositoriesModule,
   ],
   providers: [
-    // Command and query validators
+    // Request validators
     RegisterUserValidator,
     RequestUserVerificationValidator,
     VerifyUserValidator,
     LoginUserValidator,
+    LogoutUserValidator,
     /**
      * The `ValidatorsProvider` is responsible for discovering and managing
      * the mapping between commands/queries and their validators.

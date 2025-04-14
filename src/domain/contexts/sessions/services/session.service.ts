@@ -4,7 +4,7 @@ import {
   ITokenManagerService,
   TOKEN_MANAGER_SERVICE,
 } from '../interfaces/token-manager.interface';
-import { Inject, Injectable, Scope } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import {
   EVENT_BUS,
   IEventBus,
@@ -20,7 +20,7 @@ import {
   IFingerPrintService,
 } from '../interfaces/device-info.interface';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class UserSessionsService extends EntityService<UserSessions> {
   constructor(
     @Inject(FINGERPRINT_SERVICE)
