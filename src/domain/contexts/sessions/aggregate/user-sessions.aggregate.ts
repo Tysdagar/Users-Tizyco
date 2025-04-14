@@ -64,7 +64,7 @@ export class UserSessions extends AggregateRoot {
       this.resolveSession(fingerPrintService);
 
     if (!existingSession) {
-      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('NOT_AUTHENTICATED');
+      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('SESSION_CLOSED');
     }
 
     await this.revokeSession(sessionManagerService, fingerPrintHash);

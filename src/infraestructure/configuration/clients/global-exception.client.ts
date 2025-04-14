@@ -26,9 +26,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof CustomError) {
       response.status(exception.getErrorCode()).json(exception.toJSON());
     } else {
-      // Log unhandled exceptions to the console for debugging purposes
-      console.log(exception);
-
       // Respond with a generic 500 Internal Server Error
       response
         .status(500)

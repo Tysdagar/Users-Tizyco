@@ -22,9 +22,9 @@ export class SwaggerClient {
       .setTitle('Usuarios') // Title of the API
       .setDescription('Usuarios Api') // Description of the API
       .setVersion('1.0')
-      .addApiKey(
-        { type: 'apiKey', name: 'x-forwarded-for', in: 'header' },
-        'x-forwarded-for',
+      .addBearerAuth(
+        { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+        'Authorization',
       )
       .build();
 

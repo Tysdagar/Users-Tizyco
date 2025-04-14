@@ -77,7 +77,7 @@ export class PrismaUserRepository implements IUserRepository {
   ): Promise<UserPrismaDTO | null> {
     const whereClause = this.buildWhereClause(params);
 
-    if (!whereClause) return null; // Evitar llamadas inválidas
+    if (!whereClause) return null;
 
     const user = await this.db.user.findUnique({
       where: whereClause,
