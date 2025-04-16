@@ -9,84 +9,178 @@ import { USER_SESSIONS_EXCEPTION_FACTORY } from './exceptions/user-sessions-exce
 
 export type Sessions = Map<string, Session>;
 
+/**
+ * Class managing user sessions.
+ * Extends AggregateRoot to encapsulate session-related behavior.
+ */
 export class UserSessions extends AggregateRoot {
-  private constructor(
-    userId: string,
-    private readonly _sessions: Sessions,
-  ) {
-    super(userId);
-    this._sessions = _sessions;
-  }
+  /**
+   * A map of active sessions, keyed by fingerprint hash.
+   */
+  private readonly activeSessions: Sessions;
 
-  public static build(userId: string, sessions: Sessions) {
-    return new UserSessions(userId, sessions);
+  /**
+   * Private constructor. Use the `build` method to create an instance.
+   * @param {string} userId - Unique identifier for the user.
+   * @param {Sessions} activeSessions - Map of active sessions.
+   */
+  private constructor(userId: string, activeSessions: Sessions) {
+    super(userId);
+    this.activeSessions = activeSessions;
   }
 
   /**
-   * Initializes a new session, revoking existing ones if necessary.
+   * Factory method to create a UserSessions instance.
+   * @param {string} userId - Unique identifier for the user.
+   * @param {Sessions} activeSessions - Map of active sessions.
+   * @returns {UserSessions} A new UserSessions instance.
+   */
+  public static build(userId: string, activeSessions: Sessions): UserSessions {
+    return new UserSessions(userId, activeSessions);
+  }
+
+  /**
+   * Starts a new session, revoking any existing session with the same fingerprint hash.
+   * @param {ITokenManagerService} tokenManager - Token management service.
+   * @param {IUserSessionsManagerService} sessionManager - Session management service.
+   * @param {IFingerPrintService} fingerPrintService - Fingerprint hash generator.
+   * @param {UserAuthenticatedData} userData - Authenticated user data.
+   * @returns {Promise<AccessTokenData>} The new session's access token data.
    */
   public async startSession(
-    tokenManagerService: ITokenManagerService,
-    sessionManagerService: IUserSessionsManagerService,
+    tokenManager: ITokenManagerService,
+    sessionManager: IUserSessionsManagerService,
     fingerPrintService: IFingerPrintService,
     userData: UserAuthenticatedData,
   ): Promise<AccessTokenData> {
     const { fingerPrintHash, existingSession } =
-      this.resolveSession(fingerPrintService);
+      this.getSessionByFingerPrint(fingerPrintService);
 
     if (existingSession) {
-      await this.revokeSession(sessionManagerService, fingerPrintHash);
+      await this.revokeSession(sessionManager, fingerPrintHash);
     }
 
-    const session = Session.create(
+    return await this.createSession(
+      tokenManager,
+      sessionManager,
       fingerPrintService,
-      tokenManagerService,
       userData,
+      fingerPrintHash,
     );
+  }
 
-    await sessionManagerService.startSession(
+  /**
+   * Ends an existing session for the user.
+   * @param {IUserSessionsManagerService} sessionManager - Session management service.
+   * @param {IFingerPrintService} fingerPrintService - Fingerprint hash generator.
+   * @throws If the session does not exist.
+   */
+  public async finishSession(
+    sessionManager: IUserSessionsManagerService,
+    fingerPrintService: IFingerPrintService,
+  ): Promise<void> {
+    const { fingerPrintHash, existingSession } =
+      this.getSessionByFingerPrint(fingerPrintService);
+
+    if (!existingSession) {
+      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('SESSION_CLOSED');
+    }
+
+    await this.revokeSession(sessionManager, fingerPrintHash);
+  }
+
+  /**
+   * Refreshes an existing session by validating the refresh token.
+   * @param {ITokenManagerService} tokenManager - Token management service.
+   * @param {IUserSessionsManagerService} sessionManager - Session management service.
+   * @param {IFingerPrintService} fingerPrintService - Fingerprint hash generator.
+   * @param {UserAuthenticatedData} userData - Authenticated user data.
+   * @param {string} refreshToken - Refresh token to validate.
+   * @returns {Promise<AccessTokenData>} The refreshed session's access token data.
+   * @throws If the session does not exist or the refresh token is invalid.
+   */
+  public async refreshSession(
+    tokenManager: ITokenManagerService,
+    sessionManager: IUserSessionsManagerService,
+    fingerPrintService: IFingerPrintService,
+    userData: UserAuthenticatedData,
+    refreshToken: string,
+  ): Promise<AccessTokenData> {
+    const { fingerPrintHash, existingSession } =
+      this.getSessionByFingerPrint(fingerPrintService);
+
+    if (!existingSession) {
+      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('SESSION_CLOSED');
+    }
+
+    if (!existingSession.validateRefreshToken(refreshToken)) {
+      await this.revokeSession(sessionManager, fingerPrintHash);
+      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('INVALID_REFRESH_TOKEN');
+    }
+
+    await this.revokeSession(sessionManager, fingerPrintHash);
+    return await this.createSession(
+      tokenManager,
+      sessionManager,
+      fingerPrintService,
+      userData,
+      fingerPrintHash,
+    );
+  }
+
+  /**
+   * Retrieves the session for the current fingerprint hash.
+   * @param {IFingerPrintService} fingerPrintService - Fingerprint hash generator.
+   * @returns {{ existingSession: Session | undefined, fingerPrintHash: string }} The session and fingerprint hash.
+   */
+  private getSessionByFingerPrint(fingerPrintService: IFingerPrintService): {
+    existingSession: Session | undefined;
+    fingerPrintHash: string;
+  } {
+    const fingerPrintHash = fingerPrintService.getHash();
+    return {
+      fingerPrintHash,
+      existingSession: this.activeSessions.get(fingerPrintHash),
+    };
+  }
+
+  /**
+   * Revokes a session by removing it from active sessions and notifying the session manager.
+   * @param {IUserSessionsManagerService} sessionManager - Session management service.
+   * @param {string} deviceHash - Fingerprint hash of the session to revoke.
+   */
+  private async revokeSession(
+    sessionManager: IUserSessionsManagerService,
+    deviceHash: string,
+  ): Promise<void> {
+    this.activeSessions.delete(deviceHash);
+    await sessionManager.revokeSession(this.id, deviceHash);
+  }
+
+  /**
+   * Creates a new session and registers it with the session manager.
+   * @param {ITokenManagerService} tokenManager - Token management service.
+   * @param {IUserSessionsManagerService} sessionManager - Session management service.
+   * @param {IFingerPrintService} fingerPrintService - Fingerprint hash generator.
+   * @param {UserAuthenticatedData} userData - Authenticated user data.
+   * @param {string} fingerPrintHash - Fingerprint hash of the new session.
+   * @returns {Promise<AccessTokenData>} The new session's access token data.
+   */
+  private async createSession(
+    tokenManager: ITokenManagerService,
+    sessionManager: IUserSessionsManagerService,
+    fingerPrintService: IFingerPrintService,
+    userData: UserAuthenticatedData,
+    fingerPrintHash: string,
+  ): Promise<AccessTokenData> {
+    const session = Session.create(fingerPrintService, tokenManager, userData);
+
+    await sessionManager.startSession(
       this.id,
       session.sessionData,
       fingerPrintHash,
     );
 
     return session.accessTokenData;
-  }
-
-  /**
-   * Ends the current session for the user.
-   */
-  public async finishSession(
-    sessionManagerService: IUserSessionsManagerService,
-    fingerPrintService: IFingerPrintService,
-  ) {
-    const { fingerPrintHash, existingSession } =
-      this.resolveSession(fingerPrintService);
-
-    if (!existingSession) {
-      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('SESSION_CLOSED');
-    }
-
-    await this.revokeSession(sessionManagerService, fingerPrintHash);
-  }
-
-  private resolveSession(fingerPrintService: IFingerPrintService) {
-    const fingerPrintHash = fingerPrintService.getHash();
-
-    const existingSession = this._sessions.get(fingerPrintHash);
-
-    return { existingSession, fingerPrintHash };
-  }
-
-  /**
-   * Revokes an existing session.
-   */
-  private async revokeSession(
-    sessionManagerService: IUserSessionsManagerService,
-    deviceHash: string,
-  ) {
-    this._sessions.delete(deviceHash);
-
-    await sessionManagerService.revokeSession(this.id, deviceHash);
   }
 }

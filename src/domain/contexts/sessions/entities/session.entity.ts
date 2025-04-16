@@ -54,6 +54,10 @@ export class Session {
     );
   }
 
+  public validateRefreshToken(refreshToken: string) {
+    return this.refreshToken === refreshToken;
+  }
+
   get accessTokenData(): AccessTokenData {
     return {
       accessToken: this.accessToken!,

@@ -6,6 +6,7 @@ import { RequestUserVerificationUseCase } from 'src/application/use-cases/reques
 import { VerifyUserUseCase } from 'src/application/use-cases/verify-user/verify-user..usecase';
 import { LoginUserUseCase } from 'src/application/use-cases/login-user/login-user.usecase';
 import { LogoutUserUseCase } from 'src/application/use-cases/logout-user/logout-user.usecase';
+import { RefreshSessionUseCase } from 'src/application/use-cases/refresh-session-user/refresh-session-user.usecase';
 
 @Global()
 @Module({
@@ -16,6 +17,7 @@ import { LogoutUserUseCase } from 'src/application/use-cases/logout-user/logout-
     VerifyUserUseCase,
     LoginUserUseCase,
     LogoutUserUseCase,
+    RefreshSessionUseCase,
   ],
   exports: [
     RegisterUserUseCase,
@@ -23,6 +25,7 @@ import { LogoutUserUseCase } from 'src/application/use-cases/logout-user/logout-
     VerifyUserUseCase,
     LoginUserUseCase,
     LogoutUserUseCase,
+    RefreshSessionUseCase,
   ],
 })
 export class UseCasesModule {}

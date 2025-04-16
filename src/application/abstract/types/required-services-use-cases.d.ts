@@ -7,6 +7,11 @@ export interface UserRequiredDomainServices
   userService: UserService;
 }
 
+export interface SessionsRequiredDomainServices
+  extends ConfiguredServicesCollection {
+  userSessionsService: UserSessionsService;
+}
+
 export interface UserSessionsRequiredDomainServices
   extends ConfiguredServicesCollection {
   userService: UserService;

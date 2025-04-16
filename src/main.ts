@@ -6,6 +6,7 @@ import 'reflect-metadata';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { RequestContextMiddleware } from './infraestructure/configuration/middlewares/request-context.middleware';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -19,6 +20,8 @@ async function bootstrap() {
   );
 
   app.use(new RequestContextMiddleware().use.bind(this));
+
+  app.use(cookieParser());
 
   app.setViewEngine('ejs');
 

@@ -61,4 +61,19 @@ export class UserSessionsService extends EntityService<UserSessions> {
       );
     });
   }
+
+  public async refreshSession(
+    userData: UserAuthenticatedData,
+    refreshToken: string,
+  ): Promise<AccessTokenData> {
+    return await this.execute(async () => {
+      return await this.entity.refreshSession(
+        this.tokenManagerService,
+        this.userSessionsManagerService,
+        this.fingerPrintService,
+        userData,
+        refreshToken,
+      );
+    });
+  }
 }
