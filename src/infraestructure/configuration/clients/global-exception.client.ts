@@ -27,6 +27,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       response.status(exception.getErrorCode()).json(exception.toJSON());
     } else {
       // Respond with a generic 500 Internal Server Error
+      console.log(exception);
       response
         .status(500)
         .json({ error: 'Internal Error', stack: exception.stack });

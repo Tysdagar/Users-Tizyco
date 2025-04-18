@@ -30,6 +30,6 @@ export class RequestUserVerificationUseCase extends UseCase<
 
     this.userEventPublisher.requestedVerification(request.userId);
 
-    return Response.message('Se ha enviado el codigo de verificacion.');
+    return Response.withMessage('Se ha enviado el codigo de verificacion.');
   }
 }

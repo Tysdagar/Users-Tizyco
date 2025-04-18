@@ -37,6 +37,6 @@ export class LoginUserUseCase extends UseCase<
 
     this.userEventPublisher.logged(userDataAuthenticated.userId);
 
-    return Response.data<AccessTokenData>(accessToken);
+    return Response.withData<AccessTokenData>(accessToken);
   }
 }

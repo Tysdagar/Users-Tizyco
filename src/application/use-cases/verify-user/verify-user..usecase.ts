@@ -30,6 +30,6 @@ export class VerifyUserUseCase extends UseCase<
 
     this.userEventPublisher.verified(request.userId);
 
-    return Response.message('El usuario ha sido verificado correctamente.');
+    return Response.withMessage('El usuario ha sido verificado correctamente.');
   }
 }

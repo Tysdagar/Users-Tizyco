@@ -19,7 +19,7 @@ export class Response<T> {
   /**
    * The data payload associated with the response.
    */
-  public readonly data?: T;
+  public readonly _data?: T;
 
   /**
    * Private constructor for creating a `Response` instance.
@@ -28,7 +28,7 @@ export class Response<T> {
    * @param message - The message to include in the response, if any.
    */
   private constructor(data?: T, message?: string) {
-    this.data = data;
+    this._data = data;
     this.message = message;
   }
 
@@ -38,7 +38,7 @@ export class Response<T> {
    * @param message - The message to include in the response.
    * @returns A `Response<string>` instance with the provided message.
    */
-  public static message(message: string): Response<string> {
+  public static withMessage(message: string): Response<string> {
     return new Response<string>(undefined, message);
   }
 
@@ -48,7 +48,7 @@ export class Response<T> {
    * @param data - The data payload for the response.
    * @returns A `Response<T>` instance with the provided data.
    */
-  public static data<T>(data: T): Response<T> {
+  public static withData<T>(data: T): Response<T> {
     return new Response<T>(data);
   }
 
@@ -61,5 +61,12 @@ export class Response<T> {
    */
   public static complete<T>(message: string, data: T): Response<T> {
     return new Response<T>(data, message);
+  }
+
+  get data(): T {
+    if (!this._data) {
+      throw new Error(`No data found in the response.`);
+    }
+    return this._data;
   }
 }

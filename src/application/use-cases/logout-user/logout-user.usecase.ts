@@ -30,6 +30,6 @@ export class LogoutUserUseCase extends UseCase<
 
     this.userEventPublisher.loggedOut(request.userId);
 
-    return Response.message('Se ha cerrado la sesion correctamente.');
+    return Response.withMessage('Se ha cerrado la sesion correctamente.');
   }
 }

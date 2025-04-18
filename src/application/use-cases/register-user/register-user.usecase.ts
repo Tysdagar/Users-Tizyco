@@ -43,6 +43,6 @@ export class RegisterUserUseCase extends UseCase<
       user.createdState.email,
     );
 
-    return Response.message('Usuario creado exitosamente.');
+    return Response.withMessage('Usuario creado exitosamente.');
   }
 }

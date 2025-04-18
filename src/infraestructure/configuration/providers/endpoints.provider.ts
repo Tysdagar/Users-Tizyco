@@ -1,5 +1,5 @@
 import { Injectable, DynamicModule, Type } from '@nestjs/common';
-import { RequestResolver } from 'src/application/abstract/request-resolver.abstract';
+import { RequestResolver } from 'src/infraestructure/features/abstract/request-resolver.abstract';
 import * as path from 'path';
 import * as glob from 'glob';
 

@@ -18,7 +18,7 @@ export class JWTTokenManagerService implements ITokenManagerService {
   ): string {
     return this.jwt.sign(payload, {
       issuer: this.configClient.getIssuer(),
-      expiresIn: expiresIn,
+      expiresIn,
       jwtid: sessionId,
     });
   }

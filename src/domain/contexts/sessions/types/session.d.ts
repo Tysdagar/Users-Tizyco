@@ -9,8 +9,8 @@ export interface SessionData {
 export interface AccessTokenData {
   accessToken: string;
   tokenType: string;
-  refreshToken?: string;
-  expiresIn?: number;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 export interface FingerPrint {

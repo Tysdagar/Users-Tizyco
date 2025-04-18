@@ -63,6 +63,7 @@ export class Session {
       accessToken: this.accessToken!,
       tokenType: this.tokenType!,
       refreshToken: this.refreshToken,
+      expiresIn: this.expiresIn,
     };
   }
 

@@ -36,6 +36,6 @@ export class RefreshSessionUseCase extends UseCase<
       request.userAuthenticatedData.userId,
     );
 
-    return Response.data<AccessTokenData>(accessToken);
+    return Response.withData<AccessTokenData>(accessToken);
   }
 }
