@@ -1,6 +1,6 @@
 import { RequestResolver } from 'src/infraestructure/features/abstract/request-resolver.abstract';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
-import { Controller, Post, Res, UseGuards } from '@nestjs/common';
+import { Controller, HttpCode, Post, Res, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { LogoutUserRequest } from 'src/application/use-cases/logout-user/logout-user.request';
 import { LogoutUserUseCase } from 'src/application/use-cases/logout-user/logout-user.usecase';
@@ -26,6 +26,7 @@ export class LogoutUserEndpoint extends RequestResolver<void, string> {
 
   @Post(AUTH_ENDPOINT_PATHS.LOGOUT)
   @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
   public async execute(
     _,
     @UserAuthenticated() user: UserAuthenticatedData,

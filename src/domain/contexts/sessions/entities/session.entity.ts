@@ -3,6 +3,7 @@ import { ITokenManagerService } from '../interfaces/token-manager.interface';
 import { UserAuthenticatedData } from '../../users/types/user';
 import { type AccessTokenData, type SessionData } from '../types/session';
 import { IFingerPrintService } from '../interfaces/device-info.interface';
+import { USER_SESSIONS_EXCEPTION_FACTORY } from '../aggregate/exceptions/user-sessions-exception.factory';
 
 export class Session {
   private static readonly ACCESS_TOKEN_MAX_TTL: number = 900; // 15 minutos
@@ -59,9 +60,17 @@ export class Session {
   }
 
   get accessTokenData(): AccessTokenData {
+    if (!this.accessToken) {
+      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('BAD_BUILDED_SESSION');
+    }
+
+    if (!this.tokenType) {
+      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('BAD_BUILDED_SESSION');
+    }
+
     return {
-      accessToken: this.accessToken!,
-      tokenType: this.tokenType!,
+      accessToken: this.accessToken,
+      tokenType: this.tokenType,
       refreshToken: this.refreshToken,
       expiresIn: this.expiresIn,
     };

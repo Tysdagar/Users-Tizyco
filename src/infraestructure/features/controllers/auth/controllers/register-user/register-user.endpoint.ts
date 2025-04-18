@@ -1,7 +1,7 @@
 import { RequestResolver } from 'src/infraestructure/features/abstract/request-resolver.abstract';
 import { RegisterUserBody } from './register-user.body';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { RegisterUserUseCase } from 'src/application/use-cases/register-user/register-user.usecase';
 import { RegisterUserRequest } from 'src/application/use-cases/register-user/register-user.request';
@@ -22,6 +22,7 @@ export class RegisterUserEndpoint extends RequestResolver<
   }
 
   @Post(AUTH_ENDPOINT_PATHS.REGISTER)
+  @HttpCode(201)
   public async execute(
     @Body() body: RegisterUserBody,
   ): Promise<Response<string>> {

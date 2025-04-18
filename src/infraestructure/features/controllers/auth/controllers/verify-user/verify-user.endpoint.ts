@@ -1,6 +1,6 @@
 import { RequestResolver } from 'src/infraestructure/features/abstract/request-resolver.abstract';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, HttpCode, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { VerifyUserBody } from './verify-user.body';
 import { VerifyUserUseCase } from 'src/application/use-cases/verify-user/verify-user..usecase';
@@ -22,6 +22,7 @@ export class VerifyUserEndpoint extends RequestResolver<
   }
 
   @Get(AUTH_ENDPOINT_PATHS.VERIFICATION)
+  @HttpCode(200)
   public async execute(
     @Query() query: VerifyUserBody,
   ): Promise<Response<string>> {

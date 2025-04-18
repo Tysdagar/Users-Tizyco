@@ -1,6 +1,6 @@
 import { RequestResolver } from 'src/infraestructure/features/abstract/request-resolver.abstract';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
-import { Controller, Patch, Query } from '@nestjs/common';
+import { Controller, HttpCode, Patch, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { RequestUserVerificationBody } from './request-user-verification.body';
 import { RequestUserVerificationRequest } from 'src/application/use-cases/request-user-verification/request-user-verification.request';
@@ -24,6 +24,7 @@ export class RequestUserVerificationEndpoint extends RequestResolver<
   }
 
   @Patch(AUTH_ENDPOINT_PATHS.REQUEST_VERIFICATION)
+  @HttpCode(200)
   public async execute(
     @Query() query: RequestUserVerificationBody,
   ): Promise<Response<string>> {

@@ -1,6 +1,6 @@
 import { RequestResolver } from 'src/infraestructure/features/abstract/request-resolver.abstract';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { LoginUserRequest } from 'src/application/use-cases/login-user/login-user.request';
 import { LoginUserUseCase } from 'src/application/use-cases/login-user/login-user.usecase';
@@ -21,6 +21,7 @@ export class LoginUserEndpoint extends RequestResolver<LoginUserBody, string> {
   }
 
   @Post(AUTH_ENDPOINT_PATHS.LOGIN)
+  @HttpCode(200)
   public async execute(
     @Body() body: LoginUserBody,
     @Res({ passthrough: true }) res: XRes,

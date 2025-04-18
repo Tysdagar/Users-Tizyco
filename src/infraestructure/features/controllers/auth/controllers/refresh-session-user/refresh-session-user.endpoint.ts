@@ -1,6 +1,13 @@
 import { RequestResolver } from 'src/infraestructure/features/abstract/request-resolver.abstract';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
-import { Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  HttpCode,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
   BypassJwtExpired,
@@ -30,6 +37,7 @@ export class RefreshSessionEndpoint extends RequestResolver<void, string> {
   @Post(AUTH_ENDPOINT_PATHS.REFRESH_SESSION)
   @UseGuards(JwtAuthGuard)
   @BypassJwtExpired()
+  @HttpCode(200)
   public async execute(
     _,
     @UserAuthenticated() user: UserAuthenticatedData,
