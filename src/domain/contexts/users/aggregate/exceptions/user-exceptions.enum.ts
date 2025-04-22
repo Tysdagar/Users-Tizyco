@@ -11,4 +11,5 @@ export enum UserExceptionMessages {
   VERIFICATION_USER_NOT_REQUESTED = 'No se ha iniciado la solicitud de verificacion para este usuario.',
   VERIFICATION_USER_CODE_EXPIRED = 'La solicitud de verificacion ha expirado, porfavor inicie una nueva solicitud.',
   INVALID_VERIFICATION_USER_CODE = 'La solicitud de verificacion es incorrecta, porfavor inicie una nueva solicitud.',
+  MULTIFACTOR_METHODS_EXCEEDED = 'El usuario ya tiene 3 metodos multifactor creados, no se puede superar este limite.',
 }

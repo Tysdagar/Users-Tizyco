@@ -86,17 +86,17 @@ export class Multifactor {
    */
   public validate(code: number): void {
     if (!this.isInitialized) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('NOT_INITIALIZED');
+      MULTIFACTOR_EXCEPTION_FACTORY.new('NOT_INITIALIZED');
     }
 
     if (this.isExpired || !this.getCode()) {
       this.setStatus(MFAStatus.EXPIRED);
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('EXPIRED_CODE');
+      MULTIFACTOR_EXCEPTION_FACTORY.new('EXPIRED_CODE');
     }
 
     if (this.getCode() !== code) {
       this.setStatus(MFAStatus.FAILED);
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('INVALID_CODE');
+      MULTIFACTOR_EXCEPTION_FACTORY.new('INVALID_CODE');
     }
 
     this.setStatus(MFAStatus.AUTHENTICATED);
@@ -109,15 +109,15 @@ export class Multifactor {
    */
   public initialize(): void {
     if (this.isAuthenticated) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('ALREADY_AUTHENTICATED');
+      MULTIFACTOR_EXCEPTION_FACTORY.new('ALREADY_AUTHENTICATED');
     }
 
-    if (!this.isActive) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('NOT_ACTIVE');
+    if (!this._active) {
+      MULTIFACTOR_EXCEPTION_FACTORY.new('NOT_ACTIVE');
     }
 
     if (this.isInitialized) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('CODE_IN_PROGRESS');
+      MULTIFACTOR_EXCEPTION_FACTORY.new('CODE_IN_PROGRESS');
     }
 
     this.generateCode();
@@ -133,8 +133,8 @@ export class Multifactor {
    * @throws {MultifactorException} If already verified
    */
   public startVerification(): void {
-    if (this.isVerified) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('ALREADY_VERIFIED');
+    if (this._verified) {
+      MULTIFACTOR_EXCEPTION_FACTORY.new('ALREADY_VERIFIED');
     }
     this.generateCode();
   }
@@ -145,8 +145,8 @@ export class Multifactor {
    * @throws {MultifactorException} If already verified
    */
   public completeVerification(): void {
-    if (this.isVerified) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('ALREADY_VERIFIED');
+    if (this._verified) {
+      MULTIFACTOR_EXCEPTION_FACTORY.new('ALREADY_VERIFIED');
     }
     this._verified = true;
   }
@@ -159,12 +159,12 @@ export class Multifactor {
    * @throws {MultifactorException} If not verified or already active
    */
   public activate(): void {
-    if (!this.isVerified) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('NOT_VERIFIED');
+    if (!this._verified) {
+      MULTIFACTOR_EXCEPTION_FACTORY.new('NOT_VERIFIED');
     }
 
-    if (this.isActive) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('ALREADY_ACTIVE');
+    if (this._active) {
+      MULTIFACTOR_EXCEPTION_FACTORY.new('ALREADY_ACTIVE');
     }
 
     this._active = true;
@@ -176,8 +176,8 @@ export class Multifactor {
    * @throws {MultifactorException} If not active
    */
   public deactivate(): void {
-    if (!this.isActive) {
-      MULTIFACTOR_EXCEPTION_FACTORY.throw('NOT_ACTIVE');
+    if (!this._active) {
+      MULTIFACTOR_EXCEPTION_FACTORY.new('NOT_ACTIVE');
     }
     this._active = false;
   }
@@ -208,32 +208,16 @@ export class Multifactor {
 
   // Property Accessors
 
-  /**
-   * Gets the MFA method's unique identifier.
-   */
-  get multifactorId(): string {
-    return this._multifactorId;
-  }
-
-  /**
-   * Gets the authentication method type.
-   */
-  get method(): string {
-    return this._authenticationChannel.value.method;
-  }
-
-  /**
-   * Gets the contact information for this method.
-   */
-  get contact(): string {
-    return this._authenticationChannel.value.contact;
-  }
-
-  /**
-   * Checks if the method is currently active.
-   */
-  get isActive(): boolean {
-    return this._active;
+  get params(): MultifactorMethodParams {
+    return {
+      multifactorId: this._multifactorId,
+      method: this._authenticationChannel.value.method,
+      contact: this._authenticationChannel.value.contact,
+      active: this._active,
+      verified: this._verified,
+      status: this._status.value,
+      lastTimeUsed: this._lastTimeUsed,
+    };
   }
 
   /**
@@ -242,13 +226,6 @@ export class Multifactor {
    */
   private getCode(): number | undefined {
     return this._code?.value.code;
-  }
-
-  /**
-   * Checks if the method has been verified.
-   */
-  private get isVerified(): boolean {
-    return this._verified;
   }
 
   /**

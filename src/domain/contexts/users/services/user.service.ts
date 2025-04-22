@@ -18,6 +18,7 @@ import {
   VERIFICATION_USER_SERVICE,
 } from '../interfaces/verification-account.interface';
 import { UserAuthenticatedData } from '../types/user';
+import { Multifactor } from '../entities/multifactor/user-multifactor.entity';
 
 @Injectable()
 export class UserService extends EntityService<User> {
@@ -65,6 +66,15 @@ export class UserService extends EntityService<User> {
         this.passwordService,
         password,
       );
+    });
+  }
+
+  public async createMultifactorMethod(
+    method: string,
+    contact: string,
+  ): Promise<Multifactor> {
+    return this.execute(() => {
+      return this.entity.addMultifactorMethod(method, contact);
     });
   }
 

@@ -65,7 +65,7 @@ export class Authentication {
     const updatedEmail = new Email(newEmail);
 
     if (this._email.equals(updatedEmail)) {
-      AUTH_EXCEPTION_FACTORY.throw('SAME_EMAIL_UPDATE');
+      AUTH_EXCEPTION_FACTORY.new('SAME_EMAIL_UPDATE');
     }
 
     this._email = updatedEmail;

@@ -8,6 +8,7 @@ export const AUTH_ENDPOINT_PATHS = {
   VERIFICATION: '/verification',
   REFRESH_SESSION: '/refresh-session',
   LOGOUT: '/logout',
+  CREATE_MULTIFACTOR: 'create-multifactor',
 } as const;
 
 export const AUTH_COOKIE_CONFIG = {

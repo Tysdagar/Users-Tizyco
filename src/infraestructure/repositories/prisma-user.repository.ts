@@ -10,6 +10,7 @@ import {
   MultifactorStatus,
 } from '@prisma/client';
 import { IUserRepository } from 'src/domain/contexts/users/repositories/user.repository';
+import { Multifactor } from 'src/domain/contexts/users/entities/multifactor/user-multifactor.entity';
 
 @Injectable()
 export class PrismaUserRepository implements IUserRepository {
@@ -24,6 +25,34 @@ export class PrismaUserRepository implements IUserRepository {
         email,
         password,
         userStatusId: GlobalVariablesClient.getKey(status),
+      },
+    });
+  }
+
+  public async saveMultifactorMethod(
+    userId: string,
+    multifactor: Multifactor,
+  ): Promise<void> {
+    const {
+      multifactorId,
+      method,
+      contact,
+      active,
+      verified,
+      status,
+      lastTimeUsed,
+    } = multifactor.params;
+
+    await this.db.multifactorMethod.create({
+      data: {
+        multifactorMethodId: multifactorId,
+        supportedMethodId: GlobalVariablesClient.getKey(method),
+        contact,
+        statusId: GlobalVariablesClient.getKey(status),
+        active,
+        verified,
+        lastTimeUsed: lastTimeUsed,
+        userId,
       },
     });
   }

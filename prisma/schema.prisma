@@ -58,7 +58,7 @@ model MultifactorMethod {
   supportedMethod     MultifactorMethods @relation(fields: [supportedMethodId], references: [supportedMethodId])
   userId              String
   user                User               @relation(fields: [userId], references: [userId])
-  lastTimeUsed        DateTime
+  lastTimeUsed        DateTime?
   statusId            String
   multifactorStatus   MultifactorStatus  @relation(fields: [statusId], references: [multifactorStatusId])
 

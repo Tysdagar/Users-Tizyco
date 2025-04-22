@@ -1,5 +1,5 @@
-import { Authentication } from '../domain/contexts/users/entities/authentication/user-authentication.entity';
-import { UserInformation } from '../domain/contexts/users/entities/information/user-information.entity';
+import { UserInformation } from '../entities/information/user-information.entity';
+import { Authentication } from '../entities/authentication/user-authentication.entity';
 import { Multifactor } from '../domain/contexts/users/entities/multifactor/user-multifactor.entity';
 
 export interface UserInformationParams {

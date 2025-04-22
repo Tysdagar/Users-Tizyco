@@ -107,9 +107,13 @@ export class User extends AggregateRoot {
    * @param method - Type of the multifactor method.
    * @param contact - Contact information for the multifactor method.
    */
-  public addMultifactorMethod(method: string, contact: string): void {
+  public addMultifactorMethod(method: string, contact: string): Multifactor {
     const newMethod = Multifactor.create(method, contact);
+    if (this._multifactorMethods.length === 3) {
+      throw USER_EXCEPTION_FACTORY.new('MULTIFACTOR_METHODS_EXCEEDED');
+    }
     this._multifactorMethods.push(newMethod);
+    return newMethod;
   }
 
   /**
@@ -118,7 +122,9 @@ export class User extends AggregateRoot {
    * @returns The active multifactor method or undefined.
    */
   private getActiveMultifactorMethod(): Multifactor | undefined {
-    return this._multifactorMethods.find((method) => method.isActive);
+    return this._multifactorMethods.find(
+      (method) => method.params.active === true,
+    );
   }
 
   /**
@@ -131,7 +137,7 @@ export class User extends AggregateRoot {
     const multifactor = this.getActiveMultifactorMethod();
 
     if (!multifactor) {
-      throw USER_EXCEPTION_FACTORY.throw('NO_MULTIFACTOR_CODE_TO_VALIDATE');
+      throw USER_EXCEPTION_FACTORY.new('NO_MULTIFACTOR_CODE_TO_VALIDATE');
     }
 
     multifactor.validate(code);
@@ -145,7 +151,7 @@ export class User extends AggregateRoot {
   private initializeMultifactorAuthentication(multifactor: Multifactor): void {
     multifactor.initialize();
     this.triggerMultifactorInitializedEvent(multifactor);
-    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_INITIALIZED');
+    throw USER_EXCEPTION_FACTORY.new('MULTIFACTOR_AUTH_INITIALIZED');
   }
 
   /**
@@ -156,7 +162,7 @@ export class User extends AggregateRoot {
   private retryMultifactorAuthentication(multifactor: Multifactor): void {
     multifactor.initialize();
     this.triggerMultifactorInitializedEvent(multifactor);
-    USER_EXCEPTION_FACTORY.throw('MULTIFACTOR_AUTH_REINITIALIZED');
+    throw USER_EXCEPTION_FACTORY.new('MULTIFACTOR_AUTH_REINITIALIZED');
   }
 
   /**
@@ -191,7 +197,7 @@ export class User extends AggregateRoot {
    */
   public updateAuthentication(email?: string, password?: string): void {
     if (!email && !password) {
-      USER_EXCEPTION_FACTORY.throw('AT_LEAST_ONE_AUTH_PROPERTY_REQUIRED');
+      throw USER_EXCEPTION_FACTORY.new('AT_LEAST_ONE_AUTH_PROPERTY_REQUIRED');
     }
     if (email) this._authentication.updateEmail(email);
     if (password) this._authentication.updatePassword(password);
@@ -305,7 +311,7 @@ export class User extends AggregateRoot {
    */
   private checkUserVerifiedStatus(): void {
     if (this.isStatus(UserStatus.VERIFIED))
-      USER_EXCEPTION_FACTORY.throw('USER_ALREADY_VERIFIED');
+      throw USER_EXCEPTION_FACTORY.new('USER_ALREADY_VERIFIED');
   }
 
   /**
@@ -325,7 +331,7 @@ export class User extends AggregateRoot {
         return;
       }
 
-      throw USER_EXCEPTION_FACTORY.throw('VERIFICATION_USER_IN_PROGRESS');
+      throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_IN_PROGRESS');
     }
   }
 
@@ -344,18 +350,18 @@ export class User extends AggregateRoot {
       await verificationUserService.getVerificationCodeData(this.id);
 
     if (!verificationCode) {
-      throw USER_EXCEPTION_FACTORY.throw('VERIFICATION_USER_NOT_REQUESTED');
+      throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_NOT_REQUESTED');
     }
 
     if (
       VerificationCodeGenerator.checkIsExpired(verificationCode.expiresDate)
     ) {
-      throw USER_EXCEPTION_FACTORY.throw('VERIFICATION_USER_CODE_EXPIRED');
+      throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_CODE_EXPIRED');
     }
 
     if (code !== verificationCode.code) {
       await verificationUserService.removeVerificationCodeData(this.id);
-      throw USER_EXCEPTION_FACTORY.throw('INVALID_VERIFICATION_USER_CODE');
+      throw USER_EXCEPTION_FACTORY.new('INVALID_VERIFICATION_USER_CODE');
     }
   }
 
@@ -442,7 +448,7 @@ export class User extends AggregateRoot {
     if (hasExceededLimit) {
       this.block();
       await loginAttemptService.blockUserTemporarily(this.id);
-      USER_EXCEPTION_FACTORY.throw('USER_BLOCKED');
+      throw USER_EXCEPTION_FACTORY.new('USER_BLOCKED');
     }
   }
 

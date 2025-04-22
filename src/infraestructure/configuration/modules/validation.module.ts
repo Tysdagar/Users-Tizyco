@@ -14,6 +14,7 @@ import { LoginUserValidator } from 'src/application/use-cases/login-user/login-u
 import { RepositoriesModule } from './repositories.module';
 import { LogoutUserValidator } from 'src/application/use-cases/logout-user/logout-user.validator';
 import { RefreshSessionValidator } from 'src/application/use-cases/refresh-session-user/refresh-session-user.validator';
+import { CreateMultifactorValidator } from 'src/application/use-cases/create-multifactor/create-multifactor.validator';
 
 /**
  * The `ValidationModule` is responsible for registering and managing
@@ -40,6 +41,7 @@ import { RefreshSessionValidator } from 'src/application/use-cases/refresh-sessi
     LoginUserValidator,
     LogoutUserValidator,
     RefreshSessionValidator,
+    CreateMultifactorValidator,
     /**
      * The `ValidatorsProvider` is responsible for discovering and managing
      * the mapping between commands/queries and their validators.

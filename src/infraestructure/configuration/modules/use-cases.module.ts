@@ -7,6 +7,7 @@ import { VerifyUserUseCase } from 'src/application/use-cases/verify-user/verify-
 import { LoginUserUseCase } from 'src/application/use-cases/login-user/login-user.usecase';
 import { LogoutUserUseCase } from 'src/application/use-cases/logout-user/logout-user.usecase';
 import { RefreshSessionUseCase } from 'src/application/use-cases/refresh-session-user/refresh-session-user.usecase';
+import { CreateMultifactorUseCase } from 'src/application/use-cases/create-multifactor/create-multifactor.usecase';
 
 @Global()
 @Module({
@@ -18,6 +19,7 @@ import { RefreshSessionUseCase } from 'src/application/use-cases/refresh-session
     LoginUserUseCase,
     LogoutUserUseCase,
     RefreshSessionUseCase,
+    CreateMultifactorUseCase,
   ],
   exports: [
     RegisterUserUseCase,

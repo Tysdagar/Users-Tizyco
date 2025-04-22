@@ -1,4 +1,3 @@
-import { LoginUserRequest } from './login-user.request';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import {
   IValidationService,
@@ -9,6 +8,7 @@ import { UserEventPublisher } from 'src/application/services/event-publisher.ser
 import { UseCase } from 'src/application/abstract/use-case.abstract';
 import { type AccessTokenData } from 'src/domain/contexts/sessions/types/session';
 import { UserSessionsRequiredDomainServices } from 'src/application/abstract/types/required-services-use-cases';
+import { LoginUserRequest } from './login-user.request';
 
 @Injectable()
 export class LoginUserUseCase extends UseCase<

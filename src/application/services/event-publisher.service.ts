@@ -10,6 +10,7 @@ import { VerifiedUserEvent } from '../events/verified-user.event';
 import { LoggedUserEvent } from '../events/logged-user.event';
 import { LoggedOutUserEvent } from '../events/logged-out-user.event';
 import { RefreshedSessionUserEvent } from '../events/refreshed-session-user.event';
+import { MultifactorCreatedEvent } from '../events/multifactor-created.event';
 
 @Injectable()
 export class UserEventPublisher {
@@ -40,6 +41,10 @@ export class UserEventPublisher {
 
   public refreshedSession(userId: string) {
     this.publish(new RefreshedSessionUserEvent(userId));
+  }
+
+  public multifactorCreated(userId: string) {
+    this.publish(new MultifactorCreatedEvent(userId));
   }
 
   private publish(event: IEvent): void {

@@ -61,11 +61,11 @@ export class Session {
 
   get accessTokenData(): AccessTokenData {
     if (!this.accessToken) {
-      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('BAD_BUILDED_SESSION');
+      throw USER_SESSIONS_EXCEPTION_FACTORY.new('BAD_BUILDED_SESSION');
     }
 
     if (!this.tokenType) {
-      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('BAD_BUILDED_SESSION');
+      throw USER_SESSIONS_EXCEPTION_FACTORY.new('BAD_BUILDED_SESSION');
     }
 
     return {

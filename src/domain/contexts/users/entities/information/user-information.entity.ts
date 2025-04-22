@@ -60,7 +60,7 @@ export class UserInformation {
    */
   public update(information: UserInformationParams): void {
     if (!this.canUpdateInformation(information)) {
-      INFO_EXCEPTION_FACTORY.throw('NO_INFORMATION_PROPERTIES_TO_UPDATE');
+      INFO_EXCEPTION_FACTORY.new('NO_INFORMATION_PROPERTIES_TO_UPDATE');
     }
     this.updateFullName(information);
     this.updateGender(information);

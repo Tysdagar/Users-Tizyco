@@ -83,7 +83,7 @@ export class UserSessions extends AggregateRoot {
       this.getSessionByFingerPrint(fingerPrintService);
 
     if (!existingSession) {
-      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('SESSION_CLOSED');
+      throw USER_SESSIONS_EXCEPTION_FACTORY.new('SESSION_CLOSED');
     }
 
     await this.revokeSession(sessionManager, fingerPrintHash);
@@ -110,12 +110,12 @@ export class UserSessions extends AggregateRoot {
       this.getSessionByFingerPrint(fingerPrintService);
 
     if (!existingSession) {
-      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('SESSION_CLOSED');
+      throw USER_SESSIONS_EXCEPTION_FACTORY.new('SESSION_CLOSED');
     }
 
     if (!existingSession.validateRefreshToken(refreshToken)) {
       await this.revokeSession(sessionManager, fingerPrintHash);
-      throw USER_SESSIONS_EXCEPTION_FACTORY.throw('INVALID_REFRESH_TOKEN');
+      throw USER_SESSIONS_EXCEPTION_FACTORY.new('INVALID_REFRESH_TOKEN');
     }
 
     await this.revokeSession(sessionManager, fingerPrintHash);

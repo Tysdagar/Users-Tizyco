@@ -1,4 +1,5 @@
 import { User } from '../aggregate/user.aggregate';
+import { Multifactor } from '../entities/multifactor/user-multifactor.entity';
 
 export const USER_REPOSITORY = Symbol('IUserRepository');
 
@@ -10,4 +11,8 @@ export interface IUserRepository {
   findAuthDataWithPassword(email: string): Promise<User | null>;
   findUserInfo(userId: string): Promise<User | null>;
   updateUserStatus(userId: string, status: string): Promise<void>;
+  saveMultifactorMethod(
+    userId: string,
+    multifactor: Multifactor,
+  ): Promise<void>;
 }
