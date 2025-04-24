@@ -6,24 +6,29 @@ import { Multifactor } from '../entities/multifactor/user-multifactor.entity';
 import { MultifactorException } from '../entities/multifactor/exceptions/multifactor.exception';
 import { UserInformation } from '../entities/information/user-information.entity';
 
-import { ILoginAttemptService } from '../interfaces/login-attempts.interface';
+import { ISecureLoginService } from '../interfaces/secure-login.interface';
 import { IPasswordSecurityService } from '../interfaces/password-security.interface';
 
 import { USER_EXCEPTION_FACTORY } from './exceptions/user-exception.factory';
 import { UserStatus } from './configuration/status.configuration';
 import { Status } from './value-objects/status.vo';
 
-import { MultifactorInitializedEvent } from './events/multifactor-initialized.event';
-import { IVerificationUserService } from '../interfaces/verification-account.interface';
-import { InitalizedUserVerificationEvent } from './events/requested-verification.event';
-import { VerificationCodeGenerator } from './configuration/verification-code.configuration';
-import { UserStatusChangedEvent } from './events/user-status-changed.event';
+import { IVerificationUserService } from '../interfaces/verification-user.interface';
+import { InitalizedUserVerificationEvent } from './events/verification/initialized-verification.event';
+import { UserStatusChangedEvent } from './events/status/user-status-changed.event';
 import {
   type UserAuthenticatedData,
   type UserCreatedProperties,
   type UserInformationParams,
   type UserParams,
+  type MultifactorMethodParams,
 } from '../types/user';
+import { UserBlockedEvent } from './events/status/user-blocked.event';
+import { UserUnblockedEvent } from './events/status/user-unblocked.event';
+import { MultifactorInitializedEvent } from './events/auth/multifactor-initialized.event';
+import { UserInvalidCredentialsEvent } from './events/auth/invalid-credentials.event';
+import { UserAuthenticatedEvent } from './events/auth/user-authenticated.event';
+import { IUserBlockerService } from '../interfaces/user-blocker.interface';
 
 /**
  * Represents the User aggregate root in the domain layer.
@@ -112,18 +117,33 @@ export class User extends AggregateRoot {
     if (this._multifactorMethods.length === 3) {
       throw USER_EXCEPTION_FACTORY.new('MULTIFACTOR_METHODS_EXCEEDED');
     }
+
+    const multifactorRepeatedContact = this.getMultifactorMethodByParam(
+      'contact',
+      contact,
+    );
+
+    if (multifactorRepeatedContact) {
+      throw USER_EXCEPTION_FACTORY.new('MULTIFACTOR_REPEATED_CONTACT');
+    }
+
     this._multifactorMethods.push(newMethod);
     return newMethod;
   }
 
   /**
-   * Retrieves the currently active multifactor method, if any.
+   * Retrieves a multifactor method by a specified parameter and its value.
    *
-   * @returns The active multifactor method or undefined.
+   * @param param - The parameter to search by (e.g., 'multifactorId', 'method').
+   * @param value - The value to match against the parameter.
+   * @returns The matching multifactor method or undefined.
    */
-  private getActiveMultifactorMethod(): Multifactor | undefined {
+  private getMultifactorMethodByParam<K extends keyof MultifactorMethodParams>(
+    param: K,
+    value: MultifactorMethodParams[K],
+  ): Multifactor | undefined {
     return this._multifactorMethods.find(
-      (method) => method.params.active === true,
+      (method) => method.params[param] === value,
     );
   }
 
@@ -134,13 +154,13 @@ export class User extends AggregateRoot {
    * @throws {UserException} If no active multifactor method is found or if validation fails.
    */
   public validateMultifactorCode(code: number): void {
-    const multifactor = this.getActiveMultifactorMethod();
+    const multifactorActive = this.getMultifactorMethodByParam('active', true);
 
-    if (!multifactor) {
+    if (!multifactorActive) {
       throw USER_EXCEPTION_FACTORY.new('NO_MULTIFACTOR_CODE_TO_VALIDATE');
     }
 
-    multifactor.validate(code);
+    multifactorActive.validate(code);
   }
 
   /**
@@ -219,9 +239,9 @@ export class User extends AggregateRoot {
   //#region Status Management
 
   /**
-   * Activates the user's account.
+   * Verify the user's account.
    */
-  public activate(): void {
+  public verify(): void {
     this._status = new Status(UserStatus.VERIFIED);
     this.triggerUserStatusChangedEvent();
   }
@@ -249,6 +269,8 @@ export class User extends AggregateRoot {
   public block(): void {
     this._status = new Status(UserStatus.BLOCKED);
     this.triggerUserStatusChangedEvent();
+    this.triggerUserBlockedEvent();
+    throw USER_EXCEPTION_FACTORY.new('USER_BLOCKED');
   }
 
   /**
@@ -257,6 +279,7 @@ export class User extends AggregateRoot {
   public unblock(): void {
     this._status = new Status(UserStatus.VERIFIED);
     this.triggerUserStatusChangedEvent();
+    this.triggerUserUnblockedEvent();
   }
 
   /**
@@ -266,7 +289,7 @@ export class User extends AggregateRoot {
    * @returns True if the user's status matches; otherwise, false.
    */
   private isStatus(status: UserStatus): boolean {
-    return this._status.value === (status as string);
+    return this._status.value === status.toLowerCase();
   }
 
   //#endregion
@@ -284,9 +307,7 @@ export class User extends AggregateRoot {
   ): Promise<void> {
     this.checkUserVerifiedStatus();
     await this.checkUserVerificationInProgress(verificationUserService);
-    const payload = VerificationCodeGenerator.generate(this.id);
-    await verificationUserService.saveVerificationCodeData(payload);
-    this.triggerInitializedUserVerificationEvent(payload.code);
+    this.triggerInitializedUserVerificationEvent();
   }
 
   /**
@@ -296,13 +317,13 @@ export class User extends AggregateRoot {
    * @param code - Verification code to validate.
    * @throws {UserException} If verification fails for any reason.
    */
-  public async verify(
+  public async verifyUser(
     verificationUserService: IVerificationUserService,
     code: string,
   ): Promise<void> {
     this.checkUserVerifiedStatus();
     await this.checkVerificationCode(verificationUserService, code);
-    this.activate();
+    this.verify();
   }
 
   /**
@@ -323,16 +344,13 @@ export class User extends AggregateRoot {
   private async checkUserVerificationInProgress(
     verificationUserService: IVerificationUserService,
   ): Promise<void> {
-    const code = await verificationUserService.getVerificationCodeData(this.id);
+    const inProgress = await verificationUserService.isVerificationInProgress(
+      this.id,
+    );
 
-    if (code) {
-      if (VerificationCodeGenerator.checkIsExpired(code.expiresDate)) {
-        await verificationUserService.removeVerificationCodeData(this.id);
-        return;
-      }
+    if (!inProgress) return;
 
-      throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_IN_PROGRESS');
-    }
+    throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_IN_PROGRESS');
   }
 
   /**
@@ -346,21 +364,20 @@ export class User extends AggregateRoot {
     verificationUserService: IVerificationUserService,
     code: string,
   ): Promise<void> {
-    const verificationCode =
-      await verificationUserService.getVerificationCodeData(this.id);
+    const inProgress = await verificationUserService.isVerificationInProgress(
+      this.id,
+    );
 
-    if (!verificationCode) {
+    if (!inProgress) {
       throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_NOT_REQUESTED');
     }
 
-    if (
-      VerificationCodeGenerator.checkIsExpired(verificationCode.expiresDate)
-    ) {
-      throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_CODE_EXPIRED');
-    }
+    const isValid = await verificationUserService.validateVerificationCode(
+      this.id,
+      code,
+    );
 
-    if (code !== verificationCode.code) {
-      await verificationUserService.removeVerificationCodeData(this.id);
+    if (!isValid) {
       throw USER_EXCEPTION_FACTORY.new('INVALID_VERIFICATION_USER_CODE');
     }
   }
@@ -372,38 +389,35 @@ export class User extends AggregateRoot {
   /**
    * Attempts to log in the user, validating credentials and managing login attempts.
    *
-   * @param loginAttemptService - Service to manage login attempts.
+   * @param secureLoginService - Service to manage login attempts.
    * @param passwordService - Service to validate the password.
    * @param password - Password provided by the user.
    * @throws {UserException} If login fails for any reason.
    */
   public async authenticate(
-    loginAttemptService: ILoginAttemptService,
+    secureLoginService: ISecureLoginService,
     passwordService: IPasswordSecurityService,
+    userBlockerService: IUserBlockerService,
     password: string,
   ): Promise<UserAuthenticatedData> {
     this.checkUserExists();
-    await this.checkUserBlocked(loginAttemptService);
-    await this.validateCredentials(
-      loginAttemptService,
-      passwordService,
-      password,
-    );
+    await this.checkUserBlocked(userBlockerService);
+    await this.checkLoginAttemptLimit(secureLoginService);
+    await this.validateCredentials(passwordService, password);
     this.checkMultifactorAuthentication();
-    await loginAttemptService.resetAttempts(this.id);
+    this.triggerUserAuthenticatedEvent();
     return this.userAuthenticatedData;
   }
 
   /**
    * Validates the user's password and records failed attempts if incorrect.
    *
-   * @param loginAttemptService - Service to manage login attempts.
+   * @param secureLoginService - Service to manage login attempts.
    * @param passwordService - Service to validate the password.
    * @param password - Password provided by the user.
    * @throws {UserException} If credentials are invalid.
    */
   private async validateCredentials(
-    loginAttemptService: ILoginAttemptService,
     passwordService: IPasswordSecurityService,
     password: string,
   ): Promise<void> {
@@ -413,9 +427,8 @@ export class User extends AggregateRoot {
     );
 
     if (!isPasswordCorrect) {
-      await this.checkLoginAttemptLimit(loginAttemptService);
-      await loginAttemptService.recordFailedAttempt(this.id);
-      USER_EXCEPTION_FACTORY.throwValidation('INVALID_CREDENTIALS');
+      this.triggerUserInvalidCredentialsEvent();
+      throw USER_EXCEPTION_FACTORY.throwValidation('INVALID_CREDENTIALS');
     }
   }
 
@@ -424,7 +437,7 @@ export class User extends AggregateRoot {
    * @throws {UserException} If multifactor authentication is required.
    */
   private checkMultifactorAuthentication(): void {
-    const activeMethod = this.getActiveMultifactorMethod();
+    const activeMethod = this.getMultifactorMethodByParam('active', true);
     if (!activeMethod) return;
     try {
       this.initializeMultifactorAuthentication(activeMethod);
@@ -436,43 +449,40 @@ export class User extends AggregateRoot {
   /**
    * Checks if the user has exceeded the login attempt limit and blocks the account if necessary.
    *
-   * @param loginAttemptService - Service to manage login attempts.
+   * @param secureLoginService - Service to manage login attempts.
    */
   private async checkLoginAttemptLimit(
-    loginAttemptService: ILoginAttemptService,
+    secureLoginService: ISecureLoginService,
   ): Promise<void> {
-    const hasExceededLimit = await loginAttemptService.hasExceededAttemptLimit(
+    const hasExceededLimit = await secureLoginService.hasExceededAttemptLimit(
       this.id,
     );
 
     if (hasExceededLimit) {
       this.block();
-      await loginAttemptService.blockUserTemporarily(this.id);
-      throw USER_EXCEPTION_FACTORY.new('USER_BLOCKED');
     }
   }
 
   /**
    * Checks if the user is temporarily blocked and unblocks if the block period has expired.
    *
-   * @param loginAttemptService - Service to manage login attempts.
+   * @param secureLoginService - Service to manage login attempts.
    */
   private async checkUserBlocked(
-    loginAttemptService: ILoginAttemptService,
+    userBlockerService: IUserBlockerService,
   ): Promise<void> {
     const isBlocked = this.isStatus(UserStatus.BLOCKED);
-    const isStillBlocked = await loginAttemptService.isTemporarilyBlockedYet(
+    const isStillBlocked = await userBlockerService.isTemporarilyBlockedYet(
       this.id,
     );
 
     if (isBlocked && !isStillBlocked) {
       this.unblock();
-      await loginAttemptService.resetAttempts(this.id);
       return;
     }
 
     if (isBlocked) {
-      USER_EXCEPTION_FACTORY.throwValidation('USER_BLOCKED');
+      throw USER_EXCEPTION_FACTORY.new('USER_BLOCKED');
     }
   }
 
@@ -482,7 +492,7 @@ export class User extends AggregateRoot {
    */
   private checkUserExists() {
     if (this.isStatus(UserStatus.DELETED)) {
-      USER_EXCEPTION_FACTORY.throwValidation('USER_DELETED');
+      throw USER_EXCEPTION_FACTORY.throwValidation('USER_DELETED');
     }
   }
 
@@ -502,15 +512,45 @@ export class User extends AggregateRoot {
    * Triggers an event when user verification is initialized.
    * @param code - The verification code being sent.
    */
-  private triggerInitializedUserVerificationEvent(code: string): void {
-    this.addEvent(new InitalizedUserVerificationEvent(this.id, code));
+  private triggerInitializedUserVerificationEvent(): void {
+    this.addEvent(
+      new InitalizedUserVerificationEvent(this.id, this._authentication.email),
+    );
   }
 
-  /**
+  /*
    * Triggers an event when user status has changed.
    */
   private triggerUserStatusChangedEvent() {
     this.addEvent(new UserStatusChangedEvent(this.id, this.status));
+  }
+
+  /**
+   * Triggers an event when user is blocked.
+   */
+  private triggerUserBlockedEvent() {
+    this.addEvent(new UserBlockedEvent(this.id));
+  }
+
+  /**
+   * Triggers an event when user is unblocked.
+   */
+  private triggerUserUnblockedEvent() {
+    this.addEvent(new UserUnblockedEvent(this.id));
+  }
+
+  /**
+   * Triggers an event when user pass invalid credentials.
+   */
+  private triggerUserInvalidCredentialsEvent() {
+    this.addEvent(new UserInvalidCredentialsEvent(this.id));
+  }
+
+  /**
+   * Triggers an event when user is authenticated.
+   */
+  private triggerUserAuthenticatedEvent() {
+    this.addEvent(new UserAuthenticatedEvent(this.id));
   }
 
   //#endregion

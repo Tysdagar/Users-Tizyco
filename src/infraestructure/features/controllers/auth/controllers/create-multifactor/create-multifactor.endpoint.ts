@@ -2,7 +2,7 @@ import { RequestResolver } from 'src/infraestructure/features/abstract/request-r
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import { Body, Controller, HttpCode, Post, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateMultifactorBody } from './login-user.body';
+import { CreateMultifactorBody } from './create-multifactor.body';
 import {
   AUTH_API_GROUP,
   AUTH_API_TAG,
@@ -40,7 +40,7 @@ export class CreateMultifactorEndpoint extends RequestResolver<
     const request = new CreateMultifactorRequest(
       userId,
       body.method,
-      body.method,
+      body.contact,
     );
 
     const response = await this.createMultifactorUseCase.execute(request);

@@ -21,7 +21,7 @@ export abstract class ExceptionFactoryBase<
     throw new this.exceptionRef(errorKey);
   }
 
-  public throwValidation(errorKey: keyof Messages): never {
+  public throwValidation(errorKey: keyof Messages): never | Exception {
     const message = this.messages[errorKey];
     throw new ValidationException([{ field: this.field, message }]);
   }

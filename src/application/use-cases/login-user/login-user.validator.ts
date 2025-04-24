@@ -1,7 +1,6 @@
 import { CustomValidator } from 'src/application/abstract/custom-validator.abstract';
 import { RequestValidator } from 'src/application/decorators/request-validator.decorator';
 import { Inject, Injectable } from '@nestjs/common';
-import { LoginUserRequest } from '../create-multifactor/create-multifactor.request';
 import {
   USER_REPOSITORY,
   IUserRepository,
@@ -13,6 +12,7 @@ import {
 } from 'src/domain/contexts/sessions/interfaces/session-manager.interface';
 import { UserSessionsService } from 'src/domain/contexts/sessions/services/session.service';
 import { UserService } from 'src/domain/contexts/users/services/user.service';
+import { LoginUserRequest } from './login-user.request';
 
 @Injectable()
 @RequestValidator(LoginUserRequest)

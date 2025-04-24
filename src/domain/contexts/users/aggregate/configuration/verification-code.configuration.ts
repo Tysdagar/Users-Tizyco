@@ -1,9 +1,8 @@
 import { VerificationUserData } from '../../types/user';
 
 export class VerificationCodeGenerator {
-  public static generate(userId: string): VerificationUserData {
+  public static generate(): VerificationUserData {
     return {
-      userId,
       code: this.code,
       expiresDate: this.expiresDate,
     };

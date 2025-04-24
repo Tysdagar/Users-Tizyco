@@ -46,7 +46,7 @@ export class AuthenticationChannel extends ValueObject<AuthenticationChannelData
   }
 
   private checkSMSContact(method: string, contact: string): boolean {
-    if (method === (MFAMethods.SMS as string)) {
+    if (method.toLowerCase() === (MFAMethods.SMS as string)) {
       return this.validateContact(contact, Phone, 'SMS');
     }
 
@@ -54,7 +54,7 @@ export class AuthenticationChannel extends ValueObject<AuthenticationChannelData
   }
 
   private checkEmailContact(method: string, contact: string): boolean {
-    if (method === (MFAMethods.EMAIL as string)) {
+    if (method.toLowerCase() === (MFAMethods.EMAIL as string)) {
       return this.validateContact(contact, Email, 'EMAIL');
     }
 

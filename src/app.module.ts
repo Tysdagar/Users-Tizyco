@@ -3,7 +3,6 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { ValidationModule } from './infraestructure/configuration/modules/validation.module';
 import { CommandsModule } from './infraestructure/configuration/modules/commands.module';
 import { RepositoriesModule } from './infraestructure/configuration/modules/repositories.module';
-import { EnumSyncModule } from './infraestructure/configuration/modules/enum-sync.module';
 import { ServicesModule } from './infraestructure/configuration/modules/services.module';
 import { ConfigModule } from '@nestjs/config';
 import { EventsModule } from './infraestructure/configuration/modules/events.module';
@@ -11,6 +10,7 @@ import { EndpointDiscoveryService } from './infraestructure/configuration/provid
 import { UseCasesModule } from './infraestructure/configuration/modules/use-cases.module';
 import { ClientsModule } from './infraestructure/configuration/modules/clients.module';
 import { AuthModule } from './infraestructure/configuration/modules/auth.module';
+import { ConfigVariablesModule } from './infraestructure/configuration/providers/config-variables.provider';
 
 /**
  * Root application module for NestJS.
@@ -26,7 +26,6 @@ import { AuthModule } from './infraestructure/configuration/modules/auth.module'
     EventsModule,
     ValidationModule,
     CommandsModule,
-    EnumSyncModule,
     /**
      * CQRS module setup for command and query handling.
      */
@@ -38,5 +37,6 @@ import { AuthModule } from './infraestructure/configuration/modules/auth.module'
       isGlobal: true,
     }),
   ],
+  providers: [ConfigVariablesModule],
 })
 export class AppModule {}

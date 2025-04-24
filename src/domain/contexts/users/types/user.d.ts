@@ -37,7 +37,6 @@ export interface UserCreatedProperties {
 }
 
 export interface VerificationUserData {
-  userId: string;
   code: string;
   expiresDate: Date;
 }

@@ -151,7 +151,6 @@ export class PrismaUserRepository implements IUserRepository {
       userStatus: true,
       multifactorMethods: includeMultifactors
         ? {
-            where: { active: true },
             include: {
               supportedMethod: true,
               multifactorStatus: true,

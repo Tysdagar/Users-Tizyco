@@ -9,11 +9,11 @@ import { EmailService } from 'src/application/services/email.service';
 import { JWTTokenManagerService } from 'src/infraestructure/services/jwt-token-manager.service';
 import { AuthModule } from './auth.module';
 import { TOKEN_MANAGER_SERVICE } from 'src/domain/contexts/sessions/interfaces/token-manager.interface';
-import { LOGIN_ATTEMPTS_SERVICE } from 'src/domain/contexts/users/interfaces/login-attempts.interface';
+import { SECURE_LOGIN_SERVICE } from 'src/domain/contexts/users/interfaces/secure-login.interface';
 import { PASSWORD_SECURITY_SERVICE } from 'src/domain/contexts/users/interfaces/password-security.interface';
-import { VERIFICATION_USER_SERVICE } from 'src/domain/contexts/users/interfaces/verification-account.interface';
+import { VERIFICATION_USER_SERVICE } from 'src/domain/contexts/users/interfaces/verification-user.interface';
 import { UserService } from 'src/domain/contexts/users/services/user.service';
-import { RedisLoginAttemptService } from 'src/infraestructure/services/login-attempt.service';
+import { RedisLoginAttemptService } from 'src/infraestructure/services/redis-secure-login.service';
 import { BcryptPasswordSecurityService } from 'src/infraestructure/services/bcrypt-password-security.service';
 import { RedisVerificationUserService } from 'src/infraestructure/services/redis-verification-user.service';
 import { EventsModule } from './events.module';
@@ -22,6 +22,8 @@ import { USER_SESSIONS_MANAGER_SERVICE } from 'src/domain/contexts/sessions/inte
 import { RedisUserSessionsManagerService } from 'src/infraestructure/services/redis-user-sessions-manager.service';
 import { FINGERPRINT_SERVICE } from 'src/domain/contexts/sessions/interfaces/device-info.interface';
 import { FingerPrintService } from 'src/infraestructure/services/device-info.service';
+import { USER_BLOCKER_SERVICE } from 'src/domain/contexts/users/interfaces/user-blocker.interface';
+import { RedisUserBlockerService } from 'src/infraestructure/services/redis-user-blocker.service';
 
 @Global()
 @Module({
@@ -42,7 +44,8 @@ import { FingerPrintService } from 'src/infraestructure/services/device-info.ser
       provide: VERIFICATION_USER_SERVICE,
       useClass: RedisVerificationUserService,
     },
-    { provide: LOGIN_ATTEMPTS_SERVICE, useClass: RedisLoginAttemptService },
+    { provide: SECURE_LOGIN_SERVICE, useClass: RedisLoginAttemptService },
+    { provide: USER_BLOCKER_SERVICE, useClass: RedisUserBlockerService },
     {
       provide: PASSWORD_SECURITY_SERVICE,
       useClass: BcryptPasswordSecurityService,
@@ -60,7 +63,8 @@ import { FingerPrintService } from 'src/infraestructure/services/device-info.ser
     FINGERPRINT_SERVICE,
     TOKEN_MANAGER_SERVICE,
     VERIFICATION_USER_SERVICE,
-    LOGIN_ATTEMPTS_SERVICE,
+    SECURE_LOGIN_SERVICE,
+    USER_BLOCKER_SERVICE,
     PASSWORD_SECURITY_SERVICE,
     ENCRYPT_SERVICE,
     SERIALIZE_SERVICE,

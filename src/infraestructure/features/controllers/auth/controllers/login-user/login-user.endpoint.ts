@@ -2,7 +2,6 @@ import { RequestResolver } from 'src/infraestructure/features/abstract/request-r
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
 import { Body, Controller, HttpCode, Post, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { LoginUserRequest } from 'src/application/use-cases/create-multifactor/create-multifactor.request';
 import { LoginUserUseCase } from 'src/application/use-cases/login-user/login-user.usecase';
 import { LoginUserBody } from './login-user.body';
 import { Response as XRes } from 'express';
@@ -12,6 +11,7 @@ import {
   AUTH_COOKIE_CONFIG,
   AUTH_ENDPOINT_PATHS,
 } from '../../configuration/auth-api.config';
+import { LoginUserRequest } from 'src/application/use-cases/login-user/login-user.request';
 
 @ApiTags(AUTH_API_TAG)
 @Controller(AUTH_API_GROUP)

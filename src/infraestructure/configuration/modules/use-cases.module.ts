@@ -28,6 +28,7 @@ import { CreateMultifactorUseCase } from 'src/application/use-cases/create-multi
     LoginUserUseCase,
     LogoutUserUseCase,
     RefreshSessionUseCase,
+    CreateMultifactorUseCase,
   ],
 })
 export class UseCasesModule {}

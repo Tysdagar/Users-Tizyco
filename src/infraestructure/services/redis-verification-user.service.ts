@@ -1,61 +1,87 @@
-import { IVerificationUserService } from 'src/domain/contexts/users/interfaces/verification-account.interface';
+import { IVerificationUserService } from 'src/domain/contexts/users/interfaces/verification-user.interface';
 import { RedisClient } from '../configuration/clients/redis.client';
 import { Injectable } from '@nestjs/common';
-import { type VerificationUserData } from 'src/domain/contexts/users/types/user';
+import { VerificationCodeGenerator } from 'src/domain/contexts/users/aggregate/configuration/verification-code.configuration';
+import { VerificationUserData } from 'src/domain/contexts/users/types/user';
 
 @Injectable()
 export class RedisVerificationUserService implements IVerificationUserService {
-  private readonly VERIFICATION_KEY = 'verification';
-  private readonly MAX_TTL = 3600;
+  private readonly CONFIG = {
+    KEY_PREFIX: 'verification',
+    TTL_SECONDS: 3600,
+  };
 
-  constructor(private readonly rd: RedisClient) {}
+  constructor(private readonly redis: RedisClient) {}
 
-  public async saveVerificationCodeData(
-    data: VerificationUserData,
-  ): Promise<void> {
-    const verificationDataKey = `${this.VERIFICATION_KEY}:${data.userId}`;
+  public async initializeUserVerification(userId: string): Promise<void> {
+    const key = this.getKey(userId);
+    const verificationCode = VerificationCodeGenerator.generate();
 
-    const verificationDataValue = JSON.stringify({
-      code: data.code,
-      expiresAt: data.expiresDate.toISOString(),
-    });
+    console.log(verificationCode.code);
 
-    await this.rd.execute.set(
-      verificationDataKey,
-      verificationDataValue,
+    await this.redis.execute.set(
+      key,
+      JSON.stringify(verificationCode),
       'EX',
-      this.MAX_TTL,
+      this.CONFIG.TTL_SECONDS,
     );
   }
 
-  public async getVerificationCodeData(
+  public async validateVerificationCode(
     userId: string,
-  ): Promise<VerificationUserData | null> {
-    const verificationDataKey = `${this.VERIFICATION_KEY}:${userId}`;
+    code: string,
+  ): Promise<boolean> {
+    try {
+      const verificationData = await this.getVerificationUserData(userId);
+      if (!verificationData) return false;
 
-    const verificationData = await this.rd.execute.get(verificationDataKey);
+      const isCodeValid = verificationData.code === code;
+      const isExpired = VerificationCodeGenerator.checkIsExpired(
+        new Date(verificationData.expiresDate),
+      );
 
-    if (!verificationData) {
-      return null;
+      if (!isCodeValid || isExpired) {
+        return false;
+      }
+
+      return true;
+    } finally {
+      await this.finishUserVerification(userId);
     }
-
-    const parsedData = JSON.parse(verificationData) as {
-      code: string;
-      expiresAt: string;
-    };
-
-    const expiresDate = new Date(parsedData.expiresAt);
-
-    return {
-      userId,
-      code: parsedData.code,
-      expiresDate,
-    };
   }
 
-  public async removeVerificationCodeData(userId: string): Promise<void> {
-    const verificationDataKey = `${this.VERIFICATION_KEY}:${userId}`;
+  public async finishUserVerification(userId: string): Promise<void> {
+    const key = this.getKey(userId);
+    await this.redis.execute.del(key);
+  }
 
-    await this.rd.execute.del(verificationDataKey);
+  public async isVerificationInProgress(userId: string): Promise<boolean> {
+    const verificationData = await this.getVerificationUserData(userId);
+
+    if (!verificationData) return false;
+
+    const isExpired = VerificationCodeGenerator.checkIsExpired(
+      new Date(verificationData.expiresDate),
+    );
+
+    if (isExpired) {
+      await this.finishUserVerification(userId);
+      return false;
+    }
+
+    return true;
+  }
+
+  private async getVerificationUserData(
+    userId: string,
+  ): Promise<VerificationUserData | null> {
+    const key = this.getKey(userId);
+
+    const data = await this.redis.execute.get(key);
+    return data ? (JSON.parse(data) as VerificationUserData) : null;
+  }
+
+  private getKey(userId: string): string {
+    return `${this.CONFIG.KEY_PREFIX}:${userId}`;
   }
 }

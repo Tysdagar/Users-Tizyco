@@ -5,10 +5,10 @@ export class InitalizedUserVerificationEvent implements IEvent {
 
   constructor(
     public readonly userId: string,
-    public readonly code: string,
+    public readonly email: string,
   ) {
     this.userId = userId;
-    this.code = code;
+    this.email = email;
     this.ocurredOn = new Date();
   }
 }

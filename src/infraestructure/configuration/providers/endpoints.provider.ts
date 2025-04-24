@@ -36,12 +36,10 @@ export class EndpointDiscoveryService {
       }),
     );
 
-    // Filtra los controladores válidos (elimina los null)
     const validControllers = controllers.filter(
       (controller) => controller !== null,
     );
 
-    // Retorna un módulo dinámico con los controladores registrados
     return {
       module: EndpointDiscoveryService,
       controllers: validControllers,

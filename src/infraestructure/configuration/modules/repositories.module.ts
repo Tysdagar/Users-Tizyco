@@ -1,6 +1,8 @@
 import { Global, Module } from '@nestjs/common';
 import { USER_SESSIONS_MANAGER_SERVICE } from 'src/domain/contexts/sessions/interfaces/session-manager.interface';
 import { USER_REPOSITORY } from 'src/domain/contexts/users/repositories/user.repository';
+import { PrismaMultifactorMethodsDAO } from 'src/infraestructure/repositories/prisma-multifactor-methods.DAO';
+import { PrismaMultifactorStatusDAO } from 'src/infraestructure/repositories/prisma-multifactor-status.DAO';
 import { PrismaUserStatusDAO } from 'src/infraestructure/repositories/prisma-user-status.DAO';
 import { PrismaUserRepository } from 'src/infraestructure/repositories/prisma-user.repository';
 import { RedisUserSessionsManagerService } from 'src/infraestructure/services/redis-user-sessions-manager.service';
@@ -24,6 +26,8 @@ import { RedisUserSessionsManagerService } from 'src/infraestructure/services/re
       useClass: RedisUserSessionsManagerService,
     },
     PrismaUserStatusDAO,
+    PrismaMultifactorMethodsDAO,
+    PrismaMultifactorStatusDAO,
   ],
 
   /**
@@ -33,6 +37,8 @@ import { RedisUserSessionsManagerService } from 'src/infraestructure/services/re
     USER_REPOSITORY,
     USER_SESSIONS_MANAGER_SERVICE,
     PrismaUserStatusDAO,
+    PrismaMultifactorMethodsDAO,
+    PrismaMultifactorStatusDAO,
   ],
 })
 export class RepositoriesModule {}

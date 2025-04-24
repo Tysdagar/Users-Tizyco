@@ -4,9 +4,9 @@ import {
   PASSWORD_SECURITY_SERVICE,
 } from '../interfaces/password-security.interface';
 import {
-  ILoginAttemptService,
-  LOGIN_ATTEMPTS_SERVICE,
-} from '../interfaces/login-attempts.interface';
+  ISecureLoginService,
+  SECURE_LOGIN_SERVICE,
+} from '../interfaces/secure-login.interface';
 import { EntityService } from 'src/domain/common/abstract/entity-service.abstract';
 import { Inject, Injectable } from '@nestjs/common';
 import {
@@ -16,17 +16,23 @@ import {
 import {
   IVerificationUserService,
   VERIFICATION_USER_SERVICE,
-} from '../interfaces/verification-account.interface';
+} from '../interfaces/verification-user.interface';
 import { UserAuthenticatedData } from '../types/user';
 import { Multifactor } from '../entities/multifactor/user-multifactor.entity';
+import {
+  IUserBlockerService,
+  USER_BLOCKER_SERVICE,
+} from '../interfaces/user-blocker.interface';
 
 @Injectable()
 export class UserService extends EntityService<User> {
   constructor(
     @Inject(PASSWORD_SECURITY_SERVICE)
     private readonly passwordService: IPasswordSecurityService,
-    @Inject(LOGIN_ATTEMPTS_SERVICE)
-    private readonly loginAttemptsService: ILoginAttemptService,
+    @Inject(USER_BLOCKER_SERVICE)
+    private readonly userBlockerService: IUserBlockerService,
+    @Inject(SECURE_LOGIN_SERVICE)
+    private readonly secureLoginService: ISecureLoginService,
     @Inject(VERIFICATION_USER_SERVICE)
     private readonly verificationUserService: IVerificationUserService,
     @Inject(EVENT_BUS) eventBus: IEventBus,
@@ -55,15 +61,16 @@ export class UserService extends EntityService<User> {
 
   public async verifyAccount(code: string): Promise<void> {
     return await this.execute(async () => {
-      await this.entity.verify(this.verificationUserService, code);
+      await this.entity.verifyUser(this.verificationUserService, code);
     });
   }
 
   public async authenticate(password: string): Promise<UserAuthenticatedData> {
     return this.execute(async () => {
       return await this.entity.authenticate(
-        this.loginAttemptsService,
+        this.secureLoginService,
         this.passwordService,
+        this.userBlockerService,
         password,
       );
     });

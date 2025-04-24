@@ -40,9 +40,12 @@ export class GlobalVariablesClient {
    */
   public static getKey(value: string): string {
     const instance = GlobalVariablesClient.getInstance();
-    const key = instance.enumVariablesMap.get(value);
+    const key = instance.enumVariablesMap.get(value.toLowerCase());
 
-    if (!key) throw new DomainException('hola'); // Mock
+    if (!key)
+      throw new DomainException(
+        `No se ha configurado en la base de datos la key ${value}`,
+      );
 
     return key;
   }

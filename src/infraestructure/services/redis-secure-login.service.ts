@@ -1,16 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { UserStatus } from 'src/domain/contexts/users/aggregate/configuration/status.configuration';
-import { ILoginAttemptService } from 'src/domain/contexts/users/interfaces/login-attempts.interface';
+import { ISecureLoginService } from 'src/domain/contexts/users/interfaces/secure-login.interface';
 import { RedisClient } from '../configuration/clients/redis.client';
 
 @Injectable()
-export class RedisLoginAttemptService implements ILoginAttemptService {
-  private static readonly BLOCK_ATTEMPTS_KEY = 'block-attempts';
-  private static readonly BLOCK_ATTEMPTS_VALUE = UserStatus.BLOCKED;
+export class RedisLoginAttemptService implements ISecureLoginService {
   private static readonly LOGIN_ATTEMPTS_KEY = 'login-attempts';
   private static readonly MAX_ATTEMPTS = 3;
   private static readonly MAX_TTL = 300;
-  private static readonly MAX_BLOCK_TIME_TTL = 900;
 
   constructor(private readonly rd: RedisClient) {}
 
@@ -43,30 +39,6 @@ export class RedisLoginAttemptService implements ILoginAttemptService {
     const attemptsDeserialized = this.parseAttempts(attempts);
 
     return attemptsDeserialized === RedisLoginAttemptService.MAX_ATTEMPTS;
-  }
-
-  public async blockUserTemporarily(userId: string): Promise<void> {
-    const blockKey = this.getUserBlockedAttemptsKey(userId);
-    const attemptsKey = this.getUserAttemptsKey(userId);
-
-    await this.rd.execute.del(attemptsKey);
-
-    await this.rd.execute.set(
-      blockKey,
-      RedisLoginAttemptService.BLOCK_ATTEMPTS_VALUE,
-      'EX',
-      RedisLoginAttemptService.MAX_BLOCK_TIME_TTL,
-    );
-  }
-
-  public async isTemporarilyBlockedYet(userId: string): Promise<boolean> {
-    const blockKey = this.getUserBlockedAttemptsKey(userId);
-    const userAttemptsValue = await this.getKey(blockKey);
-    return !!userAttemptsValue;
-  }
-
-  private getUserBlockedAttemptsKey(userId: string) {
-    return `${RedisLoginAttemptService.BLOCK_ATTEMPTS_KEY}:${userId}`;
   }
 
   private getUserAttemptsKey(userId: string) {

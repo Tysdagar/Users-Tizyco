@@ -63,8 +63,10 @@ export abstract class SupportedValuesUtil {
  * @returns An array of values from the object.
  */
 type SupportedValues<T> = T[keyof T][];
-type EnumLike = { [key: string]: string | number };
+type EnumLike = { [key: string]: string };
 
 const getSupportedValues = <T extends object>(obj: T): SupportedValues<T> => {
-  return Object.values(obj) as SupportedValues<T>;
+  return Object.values(obj).map((value: string) =>
+    value.toLowerCase(),
+  ) as SupportedValues<T>;
 };
