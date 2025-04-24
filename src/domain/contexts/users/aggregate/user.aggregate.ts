@@ -1,18 +1,14 @@
 import { randomUUID } from 'crypto';
 import { AggregateRoot } from 'src/domain/common/abstract/aggregate-root.abstract';
-
 import { Authentication } from '../entities/authentication/user-authentication.entity';
 import { Multifactor } from '../entities/multifactor/user-multifactor.entity';
 import { MultifactorException } from '../entities/multifactor/exceptions/multifactor.exception';
 import { UserInformation } from '../entities/information/user-information.entity';
-
 import { ISecureLoginService } from '../interfaces/secure-login.interface';
 import { IPasswordSecurityService } from '../interfaces/password-security.interface';
-
 import { USER_EXCEPTION_FACTORY } from './exceptions/user-exception.factory';
 import { UserStatus } from './configuration/status.configuration';
 import { Status } from './value-objects/status.vo';
-
 import { IVerificationUserService } from '../interfaces/verification-user.interface';
 import { InitalizedUserVerificationEvent } from './events/verification/initialized-verification.event';
 import { UserStatusChangedEvent } from './events/status/user-status-changed.event';
@@ -31,19 +27,27 @@ import { UserAuthenticatedEvent } from './events/auth/user-authenticated.event';
 import { IUserBlockerService } from '../interfaces/user-blocker.interface';
 
 /**
- * Represents the User aggregate root in the domain layer.
- * Handles operations related to user authentication, multifactor authentication,
- * user information, and status.
+ * Core user management aggregate root implementing business rules for:
+ * - User lifecycle (creation, verification, blocking)
+ * - Authentication and credential management
+ * - Multifactor authentication setup
+ * - Status transitions with event emission
+ *
+ * @class User
+ * @extends AggregateRoot
+ *
+ * @property {string} email - User's email address (readonly)
+ * @property {string} status - Current user status (readonly)
+ * @property {UserCreatedProperties} createdState - Initial creation properties
  */
 export class User extends AggregateRoot {
   /**
    * Private constructor to enforce factory method usage.
-   *
-   * @param userId - Unique identifier for the user.
-   * @param _authentication - Authentication details.
-   * @param _status - Initial status of the user.
-   * @param _information - Personal information of the user.
-   * @param _multifactorMethods - Multifactor register methods of the user.
+   * @param {string} userId - Unique identifier for the user
+   * @param {Authentication} _authentication - Authentication details
+   * @param {Status} _status - Current user status
+   * @param {UserInformation} [_information=UserInformation.initialize()] - Personal information
+   * @param {Multifactor[]} [_multifactorMethods=[]] - Registered MFA methods
    */
   private constructor(
     userId: string,
@@ -53,21 +57,19 @@ export class User extends AggregateRoot {
     private readonly _multifactorMethods: Multifactor[] = [],
   ) {
     super(userId);
-    this._authentication = _authentication;
-    this._status = _status;
-    this._information = _information;
-    this._multifactorMethods = _multifactorMethods;
   }
 
   //#region Static Factory Methods
 
   /**
    * Creates a new user with the specified email and password.
-   *
-   * @param passwordService - Password security service for hashing
-   * @param email - User's email.
-   * @param password - User's password.
-   * @returns A new User instance.
+   * @async
+   * @static
+   * @param {IPasswordSecurityService} passwordService - Password hashing service
+   * @param {string} email - User's email address
+   * @param {string} password - User's plain text password
+   * @returns {Promise<User>} Newly created User instance
+   * @throws {UserException} If email or password validation fails
    */
   public static async create(
     passwordService: IPasswordSecurityService,
@@ -81,16 +83,14 @@ export class User extends AggregateRoot {
     );
 
     await user._authentication.securePassword(passwordService);
-
     return user;
   }
 
   /**
    * Builds a user instance from existing properties.
-   *
-   * @param params - User parameters including userId, authentication,
-   *                 status, information, and multifactor methods.
-   * @returns A new User instance constructed from the provided parameters.
+   * @static
+   * @param {UserParams} params - User construction parameters
+   * @returns {User} Reconstructed User instance
    */
   public static build(params: UserParams): User {
     return new User(
@@ -108,9 +108,12 @@ export class User extends AggregateRoot {
 
   /**
    * Adds a new multifactor authentication method for the user.
-   *
-   * @param method - Type of the multifactor method.
-   * @param contact - Contact information for the multifactor method.
+   * @param {string} method - Type of MFA method (SMS, EMAIL, etc.)
+   * @param {string} contact - Contact information for the method
+   * @returns {Multifactor} The created multifactor method
+   * @throws {UserException} When:
+   * - Maximum MFA methods (3) reached (MULTIFACTOR_METHODS_EXCEEDED)
+   * - Contact already registered (MULTIFACTOR_REPEATED_CONTACT)
    */
   public addMultifactorMethod(method: string, contact: string): Multifactor {
     const newMethod = Multifactor.create(method, contact);
@@ -118,12 +121,7 @@ export class User extends AggregateRoot {
       throw USER_EXCEPTION_FACTORY.new('MULTIFACTOR_METHODS_EXCEEDED');
     }
 
-    const multifactorRepeatedContact = this.getMultifactorMethodByParam(
-      'contact',
-      contact,
-    );
-
-    if (multifactorRepeatedContact) {
+    if (this.getMultifactorMethodByParam('contact', contact)) {
       throw USER_EXCEPTION_FACTORY.new('MULTIFACTOR_REPEATED_CONTACT');
     }
 
@@ -132,11 +130,26 @@ export class User extends AggregateRoot {
   }
 
   /**
-   * Retrieves a multifactor method by a specified parameter and its value.
-   *
-   * @param param - The parameter to search by (e.g., 'multifactorId', 'method').
-   * @param value - The value to match against the parameter.
-   * @returns The matching multifactor method or undefined.
+   * Validates a multifactor authentication code.
+   * @param {number} code - The code to validate
+   * @throws {UserException} When:
+   * - No active MFA method (NO_MULTIFACTOR_CODE_TO_VALIDATE)
+   * - Code validation fails (handled by Multifactor entity)
+   */
+  public validateMultifactorCode(code: number): void {
+    const method = this.getMultifactorMethodByParam('active', true);
+    if (!method)
+      throw USER_EXCEPTION_FACTORY.new('NO_MULTIFACTOR_CODE_TO_VALIDATE');
+    method.validate(code);
+  }
+
+  /**
+   * Retrieves a multifactor method by parameter.
+   * @private
+   * @template K - Key of MultifactorMethodParams
+   * @param {K} param - Parameter to search by
+   * @param {MultifactorMethodParams[K]} value - Value to match
+   * @returns {Multifactor|undefined} Found method or undefined
    */
   private getMultifactorMethodByParam<K extends keyof MultifactorMethodParams>(
     param: K,
@@ -148,25 +161,11 @@ export class User extends AggregateRoot {
   }
 
   /**
-   * Validates a multifactor authentication code against the user's active method.
-   *
-   * @param code - The code to validate.
-   * @throws {UserException} If no active multifactor method is found or if validation fails.
-   */
-  public validateMultifactorCode(code: number): void {
-    const multifactorActive = this.getMultifactorMethodByParam('active', true);
-
-    if (!multifactorActive) {
-      throw USER_EXCEPTION_FACTORY.new('NO_MULTIFACTOR_CODE_TO_VALIDATE');
-    }
-
-    multifactorActive.validate(code);
-  }
-
-  /**
-   * Initializes multifactor authentication for the given method and throws an exception.
-   *
-   * @param multifactor - The multifactor method to initialize.
+   * Initializes multifactor authentication process.
+   * @private
+   * @param {Multifactor} multifactor - MFA method to initialize
+   * @throws {UserException} MULTIFACTOR_AUTH_INITIALIZED
+   * @emits MultifactorInitializedEvent
    */
   private initializeMultifactorAuthentication(multifactor: Multifactor): void {
     multifactor.initialize();
@@ -175,9 +174,11 @@ export class User extends AggregateRoot {
   }
 
   /**
-   * Retries multifactor authentication after failure and throws an exception.
-   *
-   * @param multifactor - The multifactor method to retry.
+   * Retries multifactor authentication after failure.
+   * @private
+   * @param {Multifactor} multifactor - MFA method to retry
+   * @throws {UserException} MULTIFACTOR_AUTH_REINITIALIZED
+   * @emits MultifactorInitializedEvent
    */
   private retryMultifactorAuthentication(multifactor: Multifactor): void {
     multifactor.initialize();
@@ -186,11 +187,11 @@ export class User extends AggregateRoot {
   }
 
   /**
-   * Handles exceptions related to multifactor authentication.
-   *
-   * @param multifactor - The multifactor method that caused the exception.
-   * @param error - The exception thrown.
-   * @throws Re-throws the error if not a MultifactorException or if not handled.
+   * Handles multifactor authentication exceptions.
+   * @private
+   * @param {Multifactor} multifactor - MFA method that caused exception
+   * @param {unknown} error - Thrown exception
+   * @throws Re-throws unhandled exceptions
    */
   private handleMultifactorException(
     multifactor: Multifactor,
@@ -198,40 +199,11 @@ export class User extends AggregateRoot {
   ): void {
     if (error instanceof MultifactorException) {
       if (error.matchesErrorKey('ALREADY_AUTHENTICATED')) return;
-      if (error.matchesErrorKey('EXPIRED_CODE'))
+      if (error.matchesErrorKey('EXPIRED_CODE')) {
         this.retryMultifactorAuthentication(multifactor);
+      }
     }
     throw error;
-  }
-
-  //#endregion
-
-  //#region Update Authentication Operations
-
-  /**
-   * Updates the user's email or password.
-   *
-   * @param email - New email for the user (optional).
-   * @param password - New password for the user (optional).
-   * @throws {UserException} If neither email nor password is provided.
-   */
-  public updateAuthentication(email?: string, password?: string): void {
-    if (!email && !password) {
-      throw USER_EXCEPTION_FACTORY.new('AT_LEAST_ONE_AUTH_PROPERTY_REQUIRED');
-    }
-    if (email) this._authentication.updateEmail(email);
-    if (password) this._authentication.updatePassword(password);
-  }
-
-  // Information Operations
-
-  /**
-   * Updates the user's personal information.
-   *
-   * @param information - New user information.
-   */
-  public updateUserInformation(information: UserInformationParams): void {
-    this._information.update(information);
   }
 
   //#endregion
@@ -239,7 +211,8 @@ export class User extends AggregateRoot {
   //#region Status Management
 
   /**
-   * Verify the user's account.
+   * Verifies the user's account.
+   * @emits UserStatusChangedEvent
    */
   public verify(): void {
     this._status = new Status(UserStatus.VERIFIED);
@@ -248,6 +221,7 @@ export class User extends AggregateRoot {
 
   /**
    * Deactivates the user's account.
+   * @emits UserStatusChangedEvent
    */
   public deactivate(): void {
     this._status = new Status(UserStatus.INACTIVE);
@@ -256,6 +230,7 @@ export class User extends AggregateRoot {
 
   /**
    * Marks the user's account as deleted.
+   * @emits UserStatusChangedEvent
    */
   public delete(): void {
     this._status = new Status(UserStatus.DELETED);
@@ -263,8 +238,10 @@ export class User extends AggregateRoot {
   }
 
   /**
-   * Blocks the user's account and throws an exception.
-   * @throws {UserException} With 'USER_BLOCKED' message
+   * Blocks the user's account.
+   * @emits UserBlockedEvent
+   * @emits UserStatusChangedEvent
+   * @throws {UserException} USER_BLOCKED
    */
   public block(): void {
     this._status = new Status(UserStatus.BLOCKED);
@@ -275,6 +252,8 @@ export class User extends AggregateRoot {
 
   /**
    * Unblocks the user's account.
+   * @emits UserUnblockedEvent
+   * @emits UserStatusChangedEvent
    */
   public unblock(): void {
     this._status = new Status(UserStatus.VERIFIED);
@@ -283,10 +262,10 @@ export class User extends AggregateRoot {
   }
 
   /**
-   * Checks if the user's current status matches the specified status.
-   *
-   * @param status - The status to check against.
-   * @returns True if the user's status matches; otherwise, false.
+   * Checks if user matches specified status.
+   * @private
+   * @param {UserStatus} status - Status to check against
+   * @returns {boolean} True if status matches
    */
   private isStatus(status: UserStatus): boolean {
     return this._status.value === status.toLowerCase();
@@ -294,105 +273,22 @@ export class User extends AggregateRoot {
 
   //#endregion
 
-  //#region Verification User Operations
-
-  /**
-   * Requests user verification by generating and saving a verification code.
-   *
-   * @param verificationUserService - Service to handle verification operations.
-   * @throws {UserException} If user is already verified or verification is in progress.
-   */
-  public async requestVerification(
-    verificationUserService: IVerificationUserService,
-  ): Promise<void> {
-    this.checkUserVerifiedStatus();
-    await this.checkUserVerificationInProgress(verificationUserService);
-    this.triggerInitializedUserVerificationEvent();
-  }
-
-  /**
-   * Verifies the user account using the provided code.
-   *
-   * @param verificationUserService - Service to handle verification operations.
-   * @param code - Verification code to validate.
-   * @throws {UserException} If verification fails for any reason.
-   */
-  public async verifyUser(
-    verificationUserService: IVerificationUserService,
-    code: string,
-  ): Promise<void> {
-    this.checkUserVerifiedStatus();
-    await this.checkVerificationCode(verificationUserService, code);
-    this.verify();
-  }
-
-  /**
-   * Checks if user is already verified.
-   * @throws {UserException} If user is already verified.
-   */
-  private checkUserVerifiedStatus(): void {
-    if (this.isStatus(UserStatus.VERIFIED))
-      throw USER_EXCEPTION_FACTORY.new('USER_ALREADY_VERIFIED');
-  }
-
-  /**
-   * Checks if there's an existing verification in progress.
-   *
-   * @param verificationUserService - Service to check verification status.
-   * @throws {UserException} If verification is already in progress.
-   */
-  private async checkUserVerificationInProgress(
-    verificationUserService: IVerificationUserService,
-  ): Promise<void> {
-    const inProgress = await verificationUserService.isVerificationInProgress(
-      this.id,
-    );
-
-    if (!inProgress) return;
-
-    throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_IN_PROGRESS');
-  }
-
-  /**
-   * Validates the verification code against stored data.
-   *
-   * @param verificationUserService - Service to retrieve verification data.
-   * @param code - Code to validate.
-   * @throws {UserException} If code is invalid, expired, or not requested.
-   */
-  private async checkVerificationCode(
-    verificationUserService: IVerificationUserService,
-    code: string,
-  ): Promise<void> {
-    const inProgress = await verificationUserService.isVerificationInProgress(
-      this.id,
-    );
-
-    if (!inProgress) {
-      throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_NOT_REQUESTED');
-    }
-
-    const isValid = await verificationUserService.validateVerificationCode(
-      this.id,
-      code,
-    );
-
-    if (!isValid) {
-      throw USER_EXCEPTION_FACTORY.new('INVALID_VERIFICATION_USER_CODE');
-    }
-  }
-
-  //#endregion
-
   //#region Authentication Operations
 
   /**
-   * Attempts to log in the user, validating credentials and managing login attempts.
-   *
-   * @param secureLoginService - Service to manage login attempts.
-   * @param passwordService - Service to validate the password.
-   * @param password - Password provided by the user.
-   * @throws {UserException} If login fails for any reason.
+   * Authenticates the user with provided credentials.
+   * @async
+   * @param {ISecureLoginService} secureLoginService - Login attempt service
+   * @param {IPasswordSecurityService} passwordService - Password validation service
+   * @param {IUserBlockerService} userBlockerService - User blocking service
+   * @param {string} password - Plain text password
+   * @returns {Promise<UserAuthenticatedData>} User authentication data
+   * @throws {UserException} When:
+   * - User is blocked/deleted
+   * - Invalid credentials
+   * - MFA required (MULTIFACTOR_AUTH_INITIALIZED)
+   * @emits UserAuthenticatedEvent on success
+   * @emits UserInvalidCredentialsEvent on failure
    */
   public async authenticate(
     secureLoginService: ISecureLoginService,
@@ -410,89 +306,163 @@ export class User extends AggregateRoot {
   }
 
   /**
-   * Validates the user's password and records failed attempts if incorrect.
-   *
-   * @param secureLoginService - Service to manage login attempts.
-   * @param passwordService - Service to validate the password.
-   * @param password - Password provided by the user.
-   * @throws {UserException} If credentials are invalid.
+   * Updates the user's email or password.
+   * @param {string} [email] - New email
+   * @param {string} [password] - New password
+   * @throws {UserException} AT_LEAST_ONE_AUTH_PROPERTY_REQUIRED
+   */
+  public updateAuthentication(email?: string, password?: string): void {
+    if (!email && !password) {
+      throw USER_EXCEPTION_FACTORY.new('AT_LEAST_ONE_AUTH_PROPERTY_REQUIRED');
+    }
+    if (email) this._authentication.updateEmail(email);
+    if (password) this._authentication.updatePassword(password);
+  }
+
+  /**
+   * Updates the user's personal information.
+   * @param {UserInformationParams} information - New information
+   */
+  public updateUserInformation(information: UserInformationParams): void {
+    this._information.update(information);
+  }
+
+  /**
+   * Validates user credentials.
+   * @private
+   * @async
+   * @param {IPasswordSecurityService} passwordService - Password service
+   * @param {string} password - Plain text password
+   * @throws {UserException} INVALID_CREDENTIALS
+   * @emits UserInvalidCredentialsEvent on failure
    */
   private async validateCredentials(
     passwordService: IPasswordSecurityService,
     password: string,
   ): Promise<void> {
-    const isPasswordCorrect = await this._authentication.checkCredentials(
+    const isValid = await this._authentication.checkCredentials(
       password,
       passwordService,
     );
-
-    if (!isPasswordCorrect) {
+    if (!isValid) {
       this.triggerUserInvalidCredentialsEvent();
       throw USER_EXCEPTION_FACTORY.throwValidation('INVALID_CREDENTIALS');
     }
   }
 
   /**
-   * Checks for active multifactor authentication and handles it accordingly.
-   * @throws {UserException} If multifactor authentication is required.
+   * Checks for active MFA requirements.
+   * @private
+   * @throws {UserException} MULTIFACTOR_AUTH_INITIALIZED
    */
   private checkMultifactorAuthentication(): void {
-    const activeMethod = this.getMultifactorMethodByParam('active', true);
-    if (!activeMethod) return;
+    const method = this.getMultifactorMethodByParam('active', true);
+    if (!method) return;
     try {
-      this.initializeMultifactorAuthentication(activeMethod);
+      this.initializeMultifactorAuthentication(method);
     } catch (error) {
-      this.handleMultifactorException(activeMethod, error);
+      this.handleMultifactorException(method, error);
     }
   }
 
   /**
-   * Checks if the user has exceeded the login attempt limit and blocks the account if necessary.
-   *
-   * @param secureLoginService - Service to manage login attempts.
+   * Checks login attempt limits.
+   * @private
+   * @async
+   * @param {ISecureLoginService} secureLoginService - Login service
    */
   private async checkLoginAttemptLimit(
     secureLoginService: ISecureLoginService,
   ): Promise<void> {
-    const hasExceededLimit = await secureLoginService.hasExceededAttemptLimit(
-      this.id,
-    );
-
-    if (hasExceededLimit) {
+    if (await secureLoginService.hasExceededAttemptLimit(this.id)) {
       this.block();
     }
   }
 
   /**
-   * Checks if the user is temporarily blocked and unblocks if the block period has expired.
-   *
-   * @param secureLoginService - Service to manage login attempts.
+   * Checks if user is blocked.
+   * @private
+   * @async
+   * @param {IUserBlockerService} userBlockerService - Blocker service
+   * @throws {UserException} USER_BLOCKED
    */
   private async checkUserBlocked(
     userBlockerService: IUserBlockerService,
   ): Promise<void> {
-    const isBlocked = this.isStatus(UserStatus.BLOCKED);
-    const isStillBlocked = await userBlockerService.isTemporarilyBlockedYet(
-      this.id,
-    );
+    if (!this.isStatus(UserStatus.BLOCKED)) return;
 
-    if (isBlocked && !isStillBlocked) {
+    if (!(await userBlockerService.isTemporarilyBlockedYet(this.id))) {
       this.unblock();
       return;
     }
-
-    if (isBlocked) {
-      throw USER_EXCEPTION_FACTORY.new('USER_BLOCKED');
-    }
+    throw USER_EXCEPTION_FACTORY.new('USER_BLOCKED');
   }
 
   /**
-   * Validates if the user's status is deleted.
-   * @throws {UserException} If user is deleted.
+   * Verifies user exists (not deleted).
+   * @private
+   * @throws {UserException} USER_DELETED
    */
-  private checkUserExists() {
+  private checkUserExists(): void {
     if (this.isStatus(UserStatus.DELETED)) {
       throw USER_EXCEPTION_FACTORY.throwValidation('USER_DELETED');
+    }
+  }
+
+  //#endregion
+
+  //#region Verification Operations
+
+  /**
+   * Requests user verification.
+   * @async
+   * @param {IVerificationUserService} verificationUserService - Verification service
+   * @throws {UserException} When:
+   * - User already verified (USER_ALREADY_VERIFIED)
+   * - Verification in progress (VERIFICATION_USER_IN_PROGRESS)
+   * @emits InitalizedUserVerificationEvent
+   */
+  public async requestVerification(
+    verificationUserService: IVerificationUserService,
+  ): Promise<void> {
+    this.checkUserVerifiedStatus();
+    if (await verificationUserService.isVerificationInProgress(this.id)) {
+      throw USER_EXCEPTION_FACTORY.new('VERIFICATION_USER_IN_PROGRESS');
+    }
+    this.triggerInitializedUserVerificationEvent();
+  }
+
+  /**
+   * Verifies user account with code.
+   * @async
+   * @param {IVerificationUserService} verificationUserService - Verification service
+   * @param {string} code - Verification code
+   * @throws {UserException} When:
+   * - User already verified (USER_ALREADY_VERIFIED)
+   * - Invalid/expired code (INVALID_VERIFICATION_USER_CODE)
+   * - No verification requested (VERIFICATION_USER_NOT_REQUESTED)
+   */
+  public async verifyUser(
+    verificationUserService: IVerificationUserService,
+    code: string,
+  ): Promise<void> {
+    this.checkUserVerifiedStatus();
+    if (
+      !(await verificationUserService.validateVerificationCode(this.id, code))
+    ) {
+      throw USER_EXCEPTION_FACTORY.new('INVALID_VERIFICATION_USER_CODE');
+    }
+    this.verify();
+  }
+
+  /**
+   * Checks if user is verified.
+   * @private
+   * @throws {UserException} USER_ALREADY_VERIFIED
+   */
+  private checkUserVerifiedStatus(): void {
+    if (this.isStatus(UserStatus.VERIFIED)) {
+      throw USER_EXCEPTION_FACTORY.new('USER_ALREADY_VERIFIED');
     }
   }
 
@@ -501,55 +471,59 @@ export class User extends AggregateRoot {
   //#region Events
 
   /**
-   * Triggers an event when multifactor authentication is initialized.
-   * @param multifactor - The multifactor method being initialized.
+   * Triggers multifactor initialized event.
+   * @private
+   * @param {Multifactor} multifactor - MFA method
    */
   private triggerMultifactorInitializedEvent(multifactor: Multifactor): void {
     this.addEvent(new MultifactorInitializedEvent(this.id, multifactor));
   }
 
   /**
-   * Triggers an event when user verification is initialized.
-   * @param code - The verification code being sent.
+   * Triggers verification initialized event.
+   * @private
    */
   private triggerInitializedUserVerificationEvent(): void {
-    this.addEvent(
-      new InitalizedUserVerificationEvent(this.id, this._authentication.email),
-    );
+    this.addEvent(new InitalizedUserVerificationEvent(this.id, this.email));
   }
 
-  /*
-   * Triggers an event when user status has changed.
+  /**
+   * Triggers status changed event.
+   * @private
    */
-  private triggerUserStatusChangedEvent() {
+  private triggerUserStatusChangedEvent(): void {
     this.addEvent(new UserStatusChangedEvent(this.id, this.status));
   }
 
   /**
-   * Triggers an event when user is blocked.
+   * Triggers user blocked event.
+   * @private
    */
-  private triggerUserBlockedEvent() {
+  private triggerUserBlockedEvent(): void {
     this.addEvent(new UserBlockedEvent(this.id));
   }
 
   /**
-   * Triggers an event when user is unblocked.
+   * Triggers user unblocked event.
+   * @private
    */
-  private triggerUserUnblockedEvent() {
+  private triggerUserUnblockedEvent(): void {
     this.addEvent(new UserUnblockedEvent(this.id));
   }
 
   /**
-   * Triggers an event when user pass invalid credentials.
+   * Triggers invalid credentials event.
+   * @private
    */
-  private triggerUserInvalidCredentialsEvent() {
+  private triggerUserInvalidCredentialsEvent(): void {
     this.addEvent(new UserInvalidCredentialsEvent(this.id));
   }
 
   /**
-   * Triggers an event when user is authenticated.
+   * Triggers user authenticated event.
+   * @private
    */
-  private triggerUserAuthenticatedEvent() {
+  private triggerUserAuthenticatedEvent(): void {
     this.addEvent(new UserAuthenticatedEvent(this.id));
   }
 
@@ -559,7 +533,7 @@ export class User extends AggregateRoot {
 
   /**
    * Gets the user's email address.
-   * @returns The user's email.
+   * @returns {string} The user's email
    */
   get email(): string {
     return this._authentication.email;
@@ -567,15 +541,15 @@ export class User extends AggregateRoot {
 
   /**
    * Gets the user's current status.
-   * @returns The current status value.
+   * @returns {string} Current status value
    */
   get status(): string {
     return this._status.value;
   }
 
   /**
-   * Gets the initial creation properties of the user.
-   * @returns Object containing userId, email, password, and status.
+   * Gets the initial creation properties.
+   * @returns {UserCreatedProperties} Creation state
    */
   get createdState(): UserCreatedProperties {
     return {
@@ -586,6 +560,11 @@ export class User extends AggregateRoot {
     };
   }
 
+  /**
+   * Gets authenticated user data.
+   * @private
+   * @returns {UserAuthenticatedData} Authentication data
+   */
   private get userAuthenticatedData(): UserAuthenticatedData {
     return {
       userId: this.id,
@@ -594,4 +573,6 @@ export class User extends AggregateRoot {
       status: this.status,
     };
   }
+
+  //#endregion
 }
