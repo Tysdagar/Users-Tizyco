@@ -109,15 +109,15 @@ export class Multifactor {
    */
   public initialize(): void {
     if (this.isAuthenticated) {
-      MULTIFACTOR_EXCEPTION_FACTORY.new('ALREADY_AUTHENTICATED');
+      throw MULTIFACTOR_EXCEPTION_FACTORY.new('ALREADY_AUTHENTICATED');
     }
 
     if (!this._active) {
-      MULTIFACTOR_EXCEPTION_FACTORY.new('NOT_ACTIVE');
+      throw MULTIFACTOR_EXCEPTION_FACTORY.new('NOT_ACTIVE');
     }
 
     if (this.isInitialized) {
-      MULTIFACTOR_EXCEPTION_FACTORY.new('CODE_IN_PROGRESS');
+      throw MULTIFACTOR_EXCEPTION_FACTORY.new('CODE_IN_PROGRESS');
     }
 
     this.generateCode();

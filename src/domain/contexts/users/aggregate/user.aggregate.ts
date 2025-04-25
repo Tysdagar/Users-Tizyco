@@ -83,6 +83,7 @@ export class User extends AggregateRoot {
     );
 
     await user._authentication.securePassword(passwordService);
+
     return user;
   }
 
@@ -116,7 +117,6 @@ export class User extends AggregateRoot {
    * - Contact already registered (MULTIFACTOR_REPEATED_CONTACT)
    */
   public addMultifactorMethod(method: string, contact: string): Multifactor {
-    const newMethod = Multifactor.create(method, contact);
     if (this._multifactorMethods.length === 3) {
       throw USER_EXCEPTION_FACTORY.new('MULTIFACTOR_METHODS_EXCEEDED');
     }
@@ -125,7 +125,8 @@ export class User extends AggregateRoot {
       throw USER_EXCEPTION_FACTORY.new('MULTIFACTOR_REPEATED_CONTACT');
     }
 
-    this._multifactorMethods.push(newMethod);
+    const newMethod = Multifactor.create(method, contact);
+
     return newMethod;
   }
 

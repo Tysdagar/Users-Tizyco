@@ -4,11 +4,10 @@ export const AUTH_API_TAG = 'Authorization';
 export const AUTH_ENDPOINT_PATHS = {
   REGISTER: '/register',
   LOGIN: '/login',
-  REQUEST_VERIFICATION: '/request-verification',
-  VERIFICATION: '/verification',
+  REQUEST_VERIFICATION: '/verification-request',
+  VERIFICATION: '/verify',
   REFRESH_SESSION: '/refresh-session',
   LOGOUT: '/logout',
-  CREATE_MULTIFACTOR: 'create-multifactor',
 } as const;
 
 export const AUTH_COOKIE_CONFIG = {

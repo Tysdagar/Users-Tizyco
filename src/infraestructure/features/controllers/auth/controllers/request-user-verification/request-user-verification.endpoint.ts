@@ -1,6 +1,6 @@
 import { RequestResolver } from 'src/infraestructure/features/abstract/request-resolver.abstract';
 import { Response } from 'src/domain/common/wrappers/response.wrapper';
-import { Controller, HttpCode, Patch, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { RequestUserVerificationRequest } from 'src/application/use-cases/request-user-verification/request-user-verification.request';
 import { RequestUserVerificationUseCase } from 'src/application/use-cases/request-user-verification/request-user-verification.usecase';
@@ -28,7 +28,7 @@ export class RequestUserVerificationEndpoint extends RequestResolver<
   }
 
   @UseGuards(JwtAuthGuard)
-  @Patch(AUTH_ENDPOINT_PATHS.REQUEST_VERIFICATION)
+  @Get(AUTH_ENDPOINT_PATHS.REQUEST_VERIFICATION)
   @HttpCode(200)
   public async execute(
     _,
